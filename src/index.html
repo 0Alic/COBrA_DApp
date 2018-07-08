@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
+    <title>COBrA</title>
+
+    <!-- Bootstrap -->
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+      <script src="https://oss.maxcdn.com/html5shiv/3.7.3/html5shiv.min.js"></script>
+      <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+    <![endif]-->
+  </head>
+  <body>
+    <div class="container" style="width: 720px;">
+      <div class="row">
+
+        <!-- Header -->
+        <h1 class="text-center">COBrA Catalog</h1>
+        <hr/>
+
+        <p id="accountAddress" class="text-center"></p>
+        <br/>
+        
+        <!-- Auhtor's -->
+        <form id="authorUI">
+          <label>Want to be part of COBrA?</label>
+          <button type="button" class="btn btn-primary pull-right" onclick="App.publishForm()">Publish something!</button>
+
+          <div id="publishDiv" style="display: none;">
+            <br />
+            <input type="text" class="form-control" id="publishTitleInput" placeholder="Insert the title" />
+            <input type="text" class="form-control" id="publishAuthorInput" placeholder="Insert your author's nickname" />
+            <select class="form-control" id="genreSelect">
+                <option value="photo">Photo</option>
+                <option value="song">Song</option>
+                <option value="video">Video</option>
+            </select>
+            <br />
+            <button type="button" class="btn btn-primary" onclick="App.addContent()">Publish</button>
+          </div>
+          <hr />
+        </form>
+
+        <!-- Content List UI -->
+        <div id="customerDiv" class="col-lg-12">
+
+          <h2 class="text-center">Our contents</h2>
+          <hr/>
+    
+          <!-- Region for notifications -->
+          <div id="notificationDiv" style="display: none;">
+            <p class="text-center"><b>Need some hint?</b></p>
+            <p id="notification" class="text-center"></p>
+          </div>
+
+          <div id="loader">
+            <p class="text-center">Loading...</p>
+          </div>
+
+          <div id="contentUI" style="display: none;">
+            <table class="table table-hover">
+              <thead>
+                <tr>
+                  <th scope="col">#</th>
+                  <th scope="col">Title</th>
+                  <!--
+                  <th scope="col">Author</th>
+                  <th scope="col">Genre</th>
+                  <th scope="col">Views</th>
+                  <th scope="col">Price</th>
+                  <th scope="col">Votes</th>
+                  <th scope="col">Access</th>
+                  -->
+                </tr>
+
+              </thead>
+              <tbody id="contentList">
+              </tbody>
+            </table>
+            <hr/>
+
+            <!-- Buy Premium Form -->
+            <form id="premiumForm" onsubmit="App.buyPremium();">
+                <label>Free stuff for a whole month, for only 0.04 ether</label>
+                <button type="submit" class="btn btn-primary pull-right">Be premium!</button>
+                <hr />  
+            </form>
+            
+            <!-- Buy Content Form
+            <form onSubmit="App.buy(); return false;">
+              <div class="form-group">
+                <label for="contentSelect">Buy something: Select Content</label>
+                <select class="form-control" id="contentSelect">
+                </select>
+              </div>
+              <button type="submit" class="btn btn-primary">Buy</button>
+              <button type="button" class="btn btn-primary" id="premiumBtn" onclick="App.buyContentPremium()">Get as Premium</button>              
+              <hr />
+            </form>
+             -->
+            <!-- Input for gift
+            <form onSubmit="App.giftContent(); return false;">
+              <div class="form-group">
+                <label for="contentGiftDiv">Make a gift to one of your friends</label>
+                <button type="button" class="btn btn-primary pull-right" id="makeGiftBtn" onclick="App.makeGift()">Make a gift</button>
+                <div id="contentGiftDiv" style="display: none;">
+                  <br />
+                  <input type="text" class="form-control" id="giftAddressInput" placeholder="Insert the destination address" />
+                  <br />
+                  <button type="submit" class="btn btn-primary">Gift a content</button>
+                  <button type="button" class="btn btn-primary" onclick="App.giftPremium()">Gift a premium subscription</button>
+                </div>
+                <hr />
+              </div>
+            </form>
+               -->
+            <!-- Consume Content Form 
+            <form onSubmit="App.consume(); return false;">
+              <div class="form-group">
+                <label for="contentSelectConsume">Consume your products: Select Content</label>
+                <select class="form-control" id="contentSelectConsume">
+                </select>
+              </div>
+              <button type="submit" class="btn btn-primary">Consume</button>
+              <hr />
+            </form>
+            -->
+            <!-- Most popular informations -->
+            <form onSubmit="App.filter(); return false;">
+              <div class="form-group">
+                <label for="filterSelect">Filters</label>
+                <select class="form-control" id="filterSelect">
+                    <option value="authorPop">Most Popular of author</option>
+                    <option value="genrePop">Most Popular of genre</option>
+                    <option value="authorLate">Latest of author</option>
+                    <option value="genreLate">Latest of genre</option>
+                </select>
+                <input type="text" class="form-control" id="mostPopular" placeholder="author or genre" />
+              </div>
+              <button type="submit" class="btn btn-primary">Watch</button>
+              <label id="filterResult"></label>
+              <hr />
+            </form>
+          </div>  
+        </div>
+      </div>
+
+      <!-- Modal, popup -->
+      <div id="myModal" class="modal fade" role="dialog">
+        <div class="modal-dialog">
+
+          <!-- Modal content-->
+          <div class="modal-content">
+            <div class="modal-header">
+              <button type="button" class="close" data-dismiss="modal">&times;</button>
+              <h4 class="modal-title">Content Details</h4>
+            </div>
+            <div class="modal-body">
+
+            </div>
+            <div class="modal-footer">
+              <!-- Gift Div -->
+              <div class="form-group">
+                <div id="contentGiftDiv" style="display: none;">
+                  <label class="pull-left">Insert the destination address below</label>
+                  <br />
+                  <input type="text" class="form-control" id="giftAddressInput" placeholder="Insert the destination address" />
+                </div>
+                <hr />
+              </div>
+              <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+              <button type="button" class="btn btn-primary btn-buy" data-dismiss="modal">Buy</button>
+              <button type="button" class="btn btn-primary btn-consume" data-dismiss="modal" style="display: none;">Consume</button>
+              <button type="button" class="btn btn-primary btn-gift">Make a gift</button>
+              <button type="button" class="btn btn-primary btn-buygift" data-dismiss="modal" style="display: none;">Buy gift</button>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+    <!-- Include all compiled plugins (below), or include individual files as needed -->
+    <script src="js/bootstrap.min.js"></script>
+    <script src="js/web3.min.js"></script>
+    <script src="js/truffle-contract.js"></script>
+    <script src="js/catalogApp.js"></script>
+    <script>
+
+      // Add some click listeners
+      const popup = $('#myModal');
+      const contentDiv = $('#contentGiftDiv');
+      const giftBtn = $('.btn-gift');
+      const btnBuyGift = $(".btn-buygift");
+
+      popup.on('hidden.bs.modal', function () {
+
+        contentDiv.hide();
+        giftBtn.show();
+        btnBuyGift.hide();
+        $('#giftAddressInput').val("");
+      });
+
+
+      giftBtn.click(function() {
+          contentDiv.show();
+          giftBtn.hide();
+          btnBuyGift.show();
+      });
+      
+    </script>
+  </body>
+</html>

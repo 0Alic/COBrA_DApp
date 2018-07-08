@@ -1,6 +1,5 @@
 
 // Artifacts == truffle's contract abstraction
-var Election = artifacts.require("./Election.sol");
 var Catalog = artifacts.require("./Catalog.sol");
 var PhotoContent = artifacts.require("./PhotoContentManagement");
 var SongContent = artifacts.require("./SongContentManagement");
@@ -39,7 +38,6 @@ module.exports = function(deployer) {
 
     deployer.then(async () => {
 
-        await deployer.deploy(Election);
         const catalog = await deployer.deploy(Catalog, {from: catalogCEO});
 
         // Deploy a few stuff

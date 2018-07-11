@@ -70,14 +70,6 @@
                 <tr>
                   <th scope="col">#</th>
                   <th scope="col">Title</th>
-                  <!--
-                  <th scope="col">Author</th>
-                  <th scope="col">Genre</th>
-                  <th scope="col">Views</th>
-                  <th scope="col">Price</th>
-                  <th scope="col">Votes</th>
-                  <th scope="col">Access</th>
-                  -->
                 </tr>
 
               </thead>
@@ -89,49 +81,15 @@
             <!-- Buy Premium Form -->
             <form id="premiumForm" onsubmit="App.buyPremium();">
                 <label>Free stuff for a whole month, for only 0.04 ether</label>
-                <button type="submit" class="btn btn-primary pull-right">Be premium!</button>
+                <button type="button" class="btn btn-primary pull-right" onclick="App.giftPremiumForm()" id="showPremiumBtn">Gift premium</button>
+                <button type="button" class="btn btn-primary pull-right" onclick="App.giftPremium()" id="giftPremiumBtn" style="display: none">Gift premium to</button>
+                <button type="submit" class="btn btn-primary pull-right" id="buyPremiumBtn" style="margin-right : 10px">Be premium!</button>
+                <br />
+                <br />
+                <input type="text" class="form-control" id="giftPremiumInput" placeholder="dest address" style="display : none"/>
                 <hr />  
             </form>
             
-            <!-- Buy Content Form
-            <form onSubmit="App.buy(); return false;">
-              <div class="form-group">
-                <label for="contentSelect">Buy something: Select Content</label>
-                <select class="form-control" id="contentSelect">
-                </select>
-              </div>
-              <button type="submit" class="btn btn-primary">Buy</button>
-              <button type="button" class="btn btn-primary" id="premiumBtn" onclick="App.buyContentPremium()">Get as Premium</button>              
-              <hr />
-            </form>
-             -->
-            <!-- Input for gift
-            <form onSubmit="App.giftContent(); return false;">
-              <div class="form-group">
-                <label for="contentGiftDiv">Make a gift to one of your friends</label>
-                <button type="button" class="btn btn-primary pull-right" id="makeGiftBtn" onclick="App.makeGift()">Make a gift</button>
-                <div id="contentGiftDiv" style="display: none;">
-                  <br />
-                  <input type="text" class="form-control" id="giftAddressInput" placeholder="Insert the destination address" />
-                  <br />
-                  <button type="submit" class="btn btn-primary">Gift a content</button>
-                  <button type="button" class="btn btn-primary" onclick="App.giftPremium()">Gift a premium subscription</button>
-                </div>
-                <hr />
-              </div>
-            </form>
-               -->
-            <!-- Consume Content Form 
-            <form onSubmit="App.consume(); return false;">
-              <div class="form-group">
-                <label for="contentSelectConsume">Consume your products: Select Content</label>
-                <select class="form-control" id="contentSelectConsume">
-                </select>
-              </div>
-              <button type="submit" class="btn btn-primary">Consume</button>
-              <hr />
-            </form>
-            -->
             <!-- Most popular informations -->
             <form onSubmit="App.filter(); return false;">
               <div class="form-group">
@@ -152,8 +110,8 @@
         </div>
       </div>
 
-      <!-- Modal, popup -->
-      <div id="myModal" class="modal fade" role="dialog">
+      <!-- Buy Modal, popup -->
+      <div id="buyModal" class="modal fade" role="dialog">
         <div class="modal-dialog">
 
           <!-- Modal content-->
@@ -185,6 +143,7 @@
 
         </div>
       </div>
+
     </div>
 
     <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
@@ -197,7 +156,7 @@
     <script>
 
       // Add some click listeners
-      const popup = $('#myModal');
+      const popup = $('#buyModal');
       const contentDiv = $('#contentGiftDiv');
       const giftBtn = $('.btn-gift');
       const btnBuyGift = $(".btn-buygift");

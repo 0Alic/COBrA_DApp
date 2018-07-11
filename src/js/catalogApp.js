@@ -1,12 +1,24 @@
 App = {
+
+    ////////////////////////////////////////////
+    ////            State Variables         ////
+    ////////////////////////////////////////////
+
     web3Provider: null,
     contracts: {},
     account: '0x0',
+    isPremium: false,
     premiumCost: 40000000000000000,
     contentCost: 1000000000000000,
     oneEther: 1000000000000000000,
     lastBlock: 0,
     listenPeriod: 5,    // app listens for events on the last 5 blocks
+
+
+    ////////////////////////////////////////////
+    ////            Init Functions          ////
+    ////////////////////////////////////////////
+
 
     init: function() {
         return App.initWeb3();
@@ -118,7 +130,12 @@ App = {
 
     },
 
-    /* Render the UI */
+
+    ////////////////////////////////////////////
+    ////            Render function         ////
+    ////////////////////////////////////////////
+
+
     render: function() {
 
         var catalogInstance;
@@ -141,23 +158,25 @@ App = {
 
         // Load contract Data
         App.contracts.Catalog.deployed().then(async (instance) => {
+
             catalogInstance = instance;
 
             if(await catalogInstance.isPremium(App.account)) {
+                App.isPremium = true;
                 $("#accountAddress").html("Your Account: " + App.account + ": <b>PREMIUM</b>");
-                $('#premiumBtn').show();
-                $('#premiumForm').hide();
+                $('#buyPremiumBtn').hide();
             }
             else {
+                App.isPremium = false;
                 $("#accountAddress").html("Your Account: " + App.account);
-                $('#premiumBtn').hide();
-                $('#premiumForm').show();
+                $('#buyPremiumBtn').show();
             }
 
             return catalogInstance.getContentList();
  
         }).then(async (resultList) =>  {               
-            
+            // Show the list of deployed contents
+
             var contentList = $("#contentList");
             var contentSelect = $("#contentSelect");
             var consumeSelector = $('#contentSelectConsume');
@@ -166,36 +185,11 @@ App = {
             contentSelect.empty();
             consumeSelector.empty();
 
-            // It may take a while, depending on the number of contents
             for(var i=0; i < resultList.length; i++) {
 
-                /*
-                contentAddress = await catalogInstance.contentMap(resultList[i]);
-                contentManager = await App.contracts.BaseContent.at(contentAddress);
-                
-                ////
-                // Display the content List
-                ////                
-                title = web3.toUtf8(await contentManager.title());
-                author = web3.toUtf8(await contentManager.author());
-                genre = web3.toUtf8(await contentManager.getGenre());
-                views = await contentManager.views();
-                access = await contentManager.accessRightMap(App.account);
-
-                // Render content result
-                var contentTemplate = "<tr><th>" + (i+1) + 
-                                        "</th><td>" + title + 
-                                        "</td><td>" + author +
-                                        "</td><td>" + genre +
-                                        "</td><td>" + views +
-                                        "</td><td>" + "0.001 ether" +
-                                        "</td><td>" + "Vores" +
-                                        "</td><td>" + access + "</td></tr>"
-                */
-
                 var title =  web3.toUtf8(resultList[i]);
-
-               var contentTemplate ="<tr onclick='App.showPurchasePopup(this.id)' id='"+title+"' style='cursor: pointer' data-toggle='modal' data-target='#myModal'><th>" + (i+1) + 
+                // Build the table row, with its own click listener
+                var contentTemplate ="<tr onclick='App.showPurchasePopup(this.id)' id='"+title+"' style='cursor: pointer' data-toggle='modal' data-target='#buyModal'><th>" + (i+1) + 
                                     "</th><td>" + title + "</td></tr>";
                 contentList.append(contentTemplate);
 
@@ -203,16 +197,6 @@ App = {
                 var contentOption = '<option value="' + title + '">' + title + '</option>';
                 contentSelect.append(contentOption);
 
-                ////
-                // Display contents consumable
-                ////
-                /*
-                const hasAccess = await contentManager.accessRightMap(App.account);
-                if(hasAccess) {
-                    var contentOption = "<option value='" + contentAddress + "' >" + title + "</option>";
-                    consumeSelector.append(contentOption);    
-                }
-                */
                 // Update loading
                 loader_p.html("Loading... " + Math.ceil(((i+1)*100) / resultList.length) + " %");
             }
@@ -223,6 +207,16 @@ App = {
         });
     },
 
+
+    ////////////////////////////////////////////
+    ////    Get/Consume Content Functions   ////
+    ////////////////////////////////////////////
+
+
+    /**
+     * Buy a content, paying for its price
+     * @param content: the content to buy
+     */
     buy: function(content) {
 
         App.contracts.Catalog.deployed().then(async(instance) => {
@@ -243,83 +237,37 @@ App = {
                             " - Increase gas limit.";
             alert(errorS);
         });
-
-        // App.init();
     },
 
-    /* Buy a content
-    buy: function() {
-
-        // TODO save the contents I have got in local storage
-        var selector = $("#contentSelect");
+    /**
+     * Get a content for free
+     * @param content: the content to get
+     */
+    buyContentPremium: function(content) {
 
         App.contracts.Catalog.deployed().then(async(instance) => {
 
-            contentBytes = web3.fromUtf8(selector.val());
-            alert("REMINDER: You are buying the content " + selector.val() + " at the cost of " +
-                App.contentCost / App.oneEther + " ether. Confirm or reject the transation on metamask.");
+            contentBytes = web3.fromUtf8(content);
+            alert("REMINDER: You are buying the content " + content + " FOR FREE thanks to our premium service."
+                    + "Confirm or reject the transation on metamask.");
 
 
-            transaction = await instance.getContent(contentBytes ,{from: App.account, value: App.contentCost});
-            console.log("Content got");
+            transaction = await instance.getContentPremium(contentBytes ,{from: App.account});
+            console.log("Content got for free");
             
         }).catch(function(error) {
             console.log(error);
             const errorS = "Error while processing, possible reasons:\n"+
-                            " - Not enough balance;\n"+
                             " - You have already access to this content;\n"+
                             " - Increase gas limit.";
             alert(errorS);
         });
-
-        App.init();
     },
+
+    /**
+     * Consume a content
+     * @param content: the content to consume
      */
-
-    /* Get a content for free as premium */
-    buyContentPremium() {
-
-        var selector = $("#contentSelect");
-
-        App.contracts.Catalog.deployed().then(async (instance) => {
-
-            content = web3.fromUtf8(selector.val());
-            alert("REMINDER: You are getting the content " + selector.val() + " for free thanks to our " +
-                "premium service. Confirm or reject the transation on metamask.");
-
-            transaction = await instance.getContentPremium(content ,{from: App.account});
-            console.log("Got content for free");
-
-            App.init();
-        }).catch(function(error) {
-            console.log(error);
-            const errorS = "Error while processing, possible reasons:\n"+
-                            " - Not enough balance;\n"+
-                            " - Increase gas limit.";
-            alert(errorS);
-        });      
-    },
-    
-    /* Consume a content 
-    consume: function() {
-
-        var selector = $('#contentSelectConsume');
-        var contentAddress = selector.val();
-
-        App.contracts.BaseContent.at(contentAddress).then(async (instance) => {
-
-            transaction = await instance.consumeContent();
-
-            App.init();
-
-        }).catch(function(error) {
-            console.log(error);
-            const errorS = "Error while processing, possible reasons:\n"+
-                            " - Increase gas limit.";
-            alert(errorS);
-        });
-    },*/
-
     consume: function(content) {
         
         App.contracts.Catalog.deployed().then(async (instance) => {
@@ -328,7 +276,6 @@ App = {
             const contentManager = await App.contracts.BaseContent.at(contentAddress);
 
             contentManager.consumeContent();
-//            App.init();
 
         }).catch(function(error) {
             console.log(error);
@@ -338,7 +285,15 @@ App = {
         });
     },
 
-    /* Buy a premium service */
+
+    ////////////////////////////////////////////
+    ////            Buy Premium             ////
+    ////////////////////////////////////////////
+
+
+    /**
+     * Buy the premium service
+     */
     buyPremium: function() {
 
         App.contracts.Catalog.deployed().then(async (instance) => {
@@ -349,7 +304,6 @@ App = {
             transaction = await instance.buyPremium({from: App.account, value: App.premiumCost});
             console.log("Premium got");
 
-            App.init();
         }).catch(function(error) {
             const errorS = "Error while processing, possible reasons:\n"+
                             " - Not enough balance;\n"+
@@ -359,13 +313,24 @@ App = {
         });
     },
 
-    /* Show the gift form */
+
+    ////////////////////////////////////////////
+    ////            Gift Functions          ////
+    ////////////////////////////////////////////
+
+
+    /**
+     * Show gift form
+     */
     makeGift: function() {
 
         $('#contentGiftDiv').show();
     },
 
-    /* Make a gift */
+
+    /**
+     * Gift a content to someone
+     */
     giftContent: function() {
 
         App.contracts.Catalog.deployed().then(async (instance) => {
@@ -385,7 +350,6 @@ App = {
                 console.log("Content gifted");
                 $('#contentGiftDiv').hide();
 
-                App.init();
             }
         }).catch(function(error) {
             console.log(error);
@@ -398,12 +362,26 @@ App = {
         });
     },
 
-    /* Gift a premium subscription */
+
+    /**
+     * Show the gift premium form 
+     */
+    giftPremiumForm: function() {
+
+        $("#giftPremiumInput").show();
+        $("#giftPremiumBtn").show();
+        $("#showPremiumBtn").hide();
+    },
+
+
+    /**
+     * Gift a premium subscription
+     */
     giftPremium: function() {
 
         App.contracts.Catalog.deployed().then(async (instance) => {
 
-            var input = $('#giftAddressInput');
+            var input = $('#giftPremiumInput');
 
             if(input.val() == "") {
                 alert("Empty field");
@@ -412,11 +390,13 @@ App = {
 
                 alert("REMINDER: You are gifting a premium subscription to " + input.val() + " at the cost of " +
                      App.premiumCost / App.oneEther + " ether. Confirm or reject the transation on metamask.");
+
                 transaction = await instance.giftPremium(input.val(), {from: App.account, value: App.premiumCost});
                 console.log("Premium gifted");
-                $('#contentGiftDiv').hide();
 
-                App.init();
+                $("#giftPremiumInput").hide();
+                $("#giftPremiumBtn").hide();
+                $("#showPremiumBtn").show();
             }
         }).catch(function(error) {
             console.log(error);
@@ -427,13 +407,22 @@ App = {
         });
     },
 
-    /* Show the publish form */
+    ////////////////////////////////////////////
+    ////            Publish Content         ////
+    ////////////////////////////////////////////
+
+
+    /**
+     * Show the publish form
+     */
     publishForm: function() {
 
         $('#publishDiv').show();        
     },
 
-    /* Publish a new content */
+    /**
+     * Publish a new content
+     */
     addContent: function() {
 
         var title = $('#publishTitleInput').val();
@@ -474,7 +463,15 @@ App = {
 
     },
 
-    /* Get inforamtion about a most popular or latest published content */
+
+    ////////////////////////////////////////////
+    ////          Content list info         ////
+    ////////////////////////////////////////////
+
+
+    /**
+     * Get inforamtion about a most popular or latest published content 
+     */
     filter: function() {
 
         var input = $('#mostPopular');
@@ -511,10 +508,19 @@ App = {
         });     
     },
 
+
+    ////////////////////////////////////////////
+    ////         Show Content Popup         ////
+    ////////////////////////////////////////////
+
+
+    /**
+     * Show the popup with all the information about a content, and the possibility to buy it
+     */
     showPurchasePopup: function(content){
 
         // Load content's contracts for more info
-        const popup = $('#myModal');
+        const popup = $('#buyModal');
         const popupBody = $(".modal-body");
         const buyBtn = $(".btn-buy");
         const consumeBtn = $(".btn-consume");
@@ -522,11 +528,24 @@ App = {
 
         popupBody.html("Loading data...");
 
-        buyBtn.click({param: content}, function(event) {
-            App.buy(event.data.param);
-            console.log("Buy " + event.data.param);
-            buyBtn.unbind("click");
-        });
+
+        // Add click listeners, and unbind them right after the click (otherwise the listeners add up)        
+        if(App.isPremium) {
+
+            buyBtn.click({param: content}, function(event) {
+                App.buyContentPremium(event.data.param);
+                console.log("Buy " + event.data.param);
+                buyBtn.unbind("click");
+            });
+        }
+        else {
+
+            buyBtn.click({param: content}, function(event) {
+                App.buy(event.data.param);
+                console.log("Buy " + event.data.param);
+                buyBtn.unbind("click");
+            });
+        }
 
         consumeBtn.click({param: content}, function(event) {
             
@@ -581,6 +600,7 @@ $(function() {
     });
 });
 
+// Helper function
 function updateNotification(defaultText, author, content) {
     
     $("#notification").html("<b>" + defaultText +"</b> " + web3.toUtf8(author) + "<b> ::: </b>" + web3.toUtf8(content));

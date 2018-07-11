@@ -28,7 +28,9 @@ const contentCost = 1000000000000000;
 
 const contentTitle1 = web3.fromAscii("I cani in spiaggia");
 const contentTitle2 = web3.fromAscii("I llama in montagna");
+const contentTitle22 = web3.fromAscii("I llama con palloncini");
 const contentTitle3 = web3.fromAscii("Stay Alpacaed");
+const contentTitle33 = web3.fromAscii("Stasera niente Breaking Italy");
 
 const authorName1 =  web3.fromAscii("cane");
 const authorName2 =  web3.fromAscii("llama");
@@ -46,7 +48,9 @@ module.exports = function(deployer) {
     //    const ph3 = await deployer.deploy(PhotoContent, web3.fromAscii("gatto"), web3.fromAscii("I gatti si lavano"), catalog.address);
 
         const content2 = await deployer.deploy(SongContent, authorName2, contentTitle2, catalog.address, {from: author2});
+        const content22 = await deployer.deploy(SongContent, authorName2, contentTitle22, catalog.address, {from: author2});
         const content3 = await deployer.deploy(SongContent, authorName3, contentTitle3, catalog.address, {from: author3});
+        const content33 = await deployer.deploy(SongContent, authorName3, contentTitle33, catalog.address, {from: author3});
 
     //    const vi1 = await deployer.deploy(VideoContent, web3.fromAscii("pranK02"), web3.fromAscii("Epico scherzo"), catalog.address);
     //    const vi2 = await deployer.deploy(VideoContent, web3.fromAscii("pranK03"), web3.fromAscii("NO CLICKBAIT"), catalog.address);
@@ -58,6 +62,8 @@ module.exports = function(deployer) {
 
         await catalog.addContent(content2.address, {from: author2});
         await catalog.addContent(content3.address, {from: author3});
+        await catalog.addContent(content33.address, {from: author3});
+        await catalog.addContent(content22.address, {from: author2});
 
     //    await catalog.addContent(vi2.address);
     //    await catalog.addContent(ph3.address);

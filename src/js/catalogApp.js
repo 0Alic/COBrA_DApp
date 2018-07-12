@@ -27,6 +27,7 @@ App = {
 
     /* initialize Web3 */
     initWeb3: function() {
+        
         if(typeof web3 != 'undefined') {
             App.web3Provider = web3.currentProvider;
             web3 = new Web3(web3.currentProvider);
@@ -57,7 +58,7 @@ App = {
             // Connect provider to interact with contract
             App.contracts.BaseContent.setProvider(App.web3Provider);
 
-            // TODO aggiungere le altre 2 astrazioni
+            // TODO aggiungere le altre 2 astrazioni, oppure aggiungerle in una seconda UI?
             $.getJSON("PhotoContentManagement.json", function(photoContent) {
 
                 App.contracts.PhotoContent = TruffleContract(photoContent);
@@ -566,9 +567,7 @@ App = {
             buyBtn.click({param: content}, function(event) {
                 App.buy(event.data.param);
                 console.log("Buy " + event.data.param);
-                buyBtn.unbind("click");
-                consumeBtn.unbind("click");
-                buyGiftBtn.unbind("click");
+                unbindClick(buyBtn, consumeBtn, buyGiftBtn);
             });
         }
 
@@ -576,19 +575,14 @@ App = {
             
             App.consume(event.data.param);
             console.log("consume " + event.data.param);
-            buyBtn.unbind("click");
-            consumeBtn.unbind("click");
-            buyGiftBtn.unbind("click");
-
+            unbindClick(buyBtn, consumeBtn, buyGiftBtn);
         });
 
         buyGiftBtn.click({param: content}, function(event) {
             App.giftContent(event.data.param);
             console.log("buy gift  " + event.data.param);
-            buyBtn.unbind("click");
-            consumeBtn.unbind("click");
-            buyGiftBtn.unbind("click");
-    });
+            unbindClick(buyBtn, consumeBtn, buyGiftBtn);
+        });
         
 
         App.contracts.Catalog.deployed().then(async(instance) => {
@@ -631,11 +625,10 @@ $(function() {
 });
 
 // Helper function
-function updateNotification(defaultText, author, content) {
-    
-    $("#notification").html("<b>" + defaultText +"</b> " + web3.toUtf8(author) + "<b> ::: </b>" + web3.toUtf8(content));
-}
+function unbindClick() {
 
+    arguments.forEach(element => { element.unbind("click");});
+}
 
 
 function addUserNotification(address, middleText, content) {

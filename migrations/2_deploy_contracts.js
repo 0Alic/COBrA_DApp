@@ -80,6 +80,7 @@ module.exports = function(deployer) {
         // Add some visual
         await catalog.getContent(contentTitle2, {from: watcher1, value: contentCost});
         await content2.consumeContent({from: watcher1});
+//        await catalog.rateContent();
         await catalog.getContent(contentTitle2, {from: watcher1, value: contentCost});
         await content2.consumeContent({from: watcher1});
 

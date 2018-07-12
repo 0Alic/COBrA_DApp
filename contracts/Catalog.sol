@@ -103,6 +103,18 @@ contract Catalog {
         _;
     }
     
+    modifier validRating(uint[] _ratings) {
+    
+        require(_ratings.length == numCategories, "Rating array not valid");
+
+        for(uint i=0; i<_ratings.length; i++) {
+            require(_ratings[i] >= minRate, "Invalid lower bound rating");
+            require(_ratings[i] <= maxRate, "Invalid upper bound rating");
+        }
+        _;
+    }
+
+    
     ///////////////////////////////////////////////////////////////////
     ///////              Contract's functions                   ///////
     ///////////////////////////////////////////////////////////////////
@@ -260,6 +272,11 @@ contract Catalog {
             contentMap[_content].authorAddress().transfer(authorReward);
             emit AuthorPayed(contentMap[_content].author()); 
         }
+    }
+    
+    function rateContent(bytes32 _content, uint[] ratings) external validRating(ratings) {
+        
+        contentMap[_content].rateContent(ratings);
     }
     
     

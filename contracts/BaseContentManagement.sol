@@ -40,17 +40,6 @@ contract BaseContentManagement {
     }
 
 
-    modifier validRating(uint[] _ratings) {
-    
-        require(_ratings.length == catalog.numCategories(), "Rating array not valid");
-
-        for(uint i=0; i<_ratings.length; i++) {
-            require(_ratings[i] >= catalog.minRate(), "Invalid lower bound rating");
-            require(_ratings[i] <= catalog.maxRate(), "Invalid upper bound rating");
-        }
-        _;
-    }
-    
     modifier validCategory(uint _category) {
         
         require(_category == uint(Catalog.Categories.Quality) ||
@@ -105,7 +94,7 @@ contract BaseContentManagement {
     }
     
     
-    function rateContent(uint[] ratings) external isCatalog validRating(ratings) {
+    function rateContent(uint[] ratings) external isCatalog {
         
         ratingMap[uint(Catalog.Categories.Quality)][SUM] += ratings[uint(Catalog.Categories.Quality)];
         ratingMap[uint(Catalog.Categories.PriceFairness)][SUM] += ratings[uint(Catalog.Categories.PriceFairness)];

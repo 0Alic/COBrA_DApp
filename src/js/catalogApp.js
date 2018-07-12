@@ -21,6 +21,7 @@ App = {
 
 
     init: function() {
+
         return App.initWeb3();
     },
 
@@ -58,7 +59,7 @@ App = {
                     App.contracts.Catalog = TruffleContract(catalog);
                     App.contracts.Catalog.setProvider(App.web3Provider);
     
-                    App.listenForEvents();   
+                    App.listenForEvents();
                     
                     // Load first series of contracts
                     return App.render();
@@ -91,8 +92,20 @@ App = {
 
                 // Consumption
                 instance.UserConsume({}, {fromBlock: from, toBlock: 'latest'}).watch(function(error, event) { // Event subscription
+
                     // Whenever the event is triggered
-                    console.log("Consumption " + event.args._user + " " + web3.toUtf8(event.args._content));
+                    const content = web3.toUtf8(event.args._content);
+                    const address = "" + event.args._user;
+                    const l = address.length;
+                    const stubAddr = address.charAt(0) + address.charAt(1) + address.charAt(2) + address.charAt(3) +
+                                     "..." + 
+                                     address.charAt(l-1) + address.charAt(l-2) + address.charAt(l-3) + address.charAt(l-4);
+
+                    console.log("Consumption " + address + " " + content);
+
+                    const s = stubAddr + " has viewed " + content;
+                    var contentTemplate ="<tr><td>" + s + "</td></tr>";
+                    $('#notificationList').append(contentTemplate);
                 });
 
                 // New Popular/Latest
@@ -124,10 +137,6 @@ App = {
                 });
             });
         })
-    },
-
-    loadContracts: function() {
-
     },
 
 
@@ -219,6 +228,8 @@ App = {
      */
     buy: function(content) {
 
+        console.log("compra compra compra");
+
         App.contracts.Catalog.deployed().then(async(instance) => {
 
             contentBytes = web3.fromUtf8(content);
@@ -270,6 +281,8 @@ App = {
      */
     consume: function(content) {
         
+        console.log("consuma consuma consuma");
+
         App.contracts.Catalog.deployed().then(async (instance) => {
             
             const contentAddress = await instance.contentMap(web3.fromUtf8(content));
@@ -528,7 +541,7 @@ App = {
 
         popupBody.html("Loading data...");
 
-
+        
         // Add click listeners, and unbind them right after the click (otherwise the listeners add up)        
         if(App.isPremium) {
 
@@ -536,6 +549,9 @@ App = {
                 App.buyContentPremium(event.data.param);
                 console.log("Buy " + event.data.param);
                 buyBtn.unbind("click");
+                consumeBtn.unbind("click");
+                buyGiftBtn.unbind("click");
+
             });
         }
         else {
@@ -544,6 +560,8 @@ App = {
                 App.buy(event.data.param);
                 console.log("Buy " + event.data.param);
                 buyBtn.unbind("click");
+                consumeBtn.unbind("click");
+                buyGiftBtn.unbind("click");
             });
         }
 
@@ -551,15 +569,20 @@ App = {
             
             App.consume(event.data.param);
             console.log("consume " + event.data.param);
+            buyBtn.unbind("click");
             consumeBtn.unbind("click");
+            buyGiftBtn.unbind("click");
 
         });
 
         buyGiftBtn.click({param: content}, function(event) {
             App.giftContent(event.data.param);
             console.log("buy gift  " + event.data.param);
+            buyBtn.unbind("click");
+            consumeBtn.unbind("click");
             buyGiftBtn.unbind("click");
-        });
+    });
+        
 
         App.contracts.Catalog.deployed().then(async(instance) => {
 

@@ -18,52 +18,52 @@
     <![endif]-->
   </head>
   <body>
-    <div class="container" style="width: 720px;">
-      <div class="row">
+    
+    <div class="container" >
 
+      <div class="row">
+        
         <!-- Header -->
         <h1 class="text-center">COBrA Catalog</h1>
-        <hr/>
+        <br/>
 
         <p id="accountAddress" class="text-center"></p>
-        <br/>
-        
-        <!-- Auhtor's -->
-        <form id="authorUI">
-          <label>Want to be part of COBrA?</label>
-          <button type="button" class="btn btn-primary pull-right" onclick="App.publishForm()">Publish something!</button>
+        <hr/>
 
-          <div id="publishDiv" style="display: none;">
-            <br />
-            <input type="text" class="form-control" id="publishTitleInput" placeholder="Insert the title" />
-            <input type="text" class="form-control" id="publishAuthorInput" placeholder="Insert your author's nickname" />
-            <select class="form-control" id="genreSelect">
-                <option value="photo">Photo</option>
-                <option value="song">Song</option>
-                <option value="video">Video</option>
-            </select>
-            <br />
-            <button type="button" class="btn btn-primary" onclick="App.addContent()">Publish</button>
-          </div>
-          <hr />
-        </form>
+        <!-- Notification Sidebar -->
+        <div class="col-lg-3">
+            <h2 class="text-center">What's going on</h2>
+            <hr />
+            <table class="table table-hover">
+                <thead>
+                  <tr>
+                    <th scope="col">Notify</th>
+                  </tr>
+                </thead>
+                <tbody id="notificationList">
+                </tbody>
+              </table>
+        </div>
 
-        <!-- Content List UI -->
-        <div id="customerDiv" class="col-lg-12">
+
+        <!-- Main UI -->
+        <div id="customerDiv" class="col-lg-9">
 
           <h2 class="text-center">Our contents</h2>
           <hr/>
     
-          <!-- Region for notifications -->
+          <!-- Region for notifications TODO remove it after the sidebar? -->
           <div id="notificationDiv" style="display: none;">
             <p class="text-center"><b>Need some hint?</b></p>
             <p id="notification" class="text-center"></p>
           </div>
 
+          <!-- Loading... -->
           <div id="loader">
             <p class="text-center">Loading...</p>
           </div>
 
+          <!-- Content List and major UI, to be displayed after the app is initialized -->
           <div id="contentUI" style="display: none;">
             <table class="table table-hover">
               <thead>
@@ -71,7 +71,6 @@
                   <th scope="col">#</th>
                   <th scope="col">Title</th>
                 </tr>
-
               </thead>
               <tbody id="contentList">
               </tbody>
@@ -106,9 +105,36 @@
               <label id="filterResult"></label>
               <hr />
             </form>
-          </div>  
-        </div>
-      </div>
+
+
+            <!-- Auhtor's -->
+            <form id="authorUI">
+              <label>Want to be part of COBrA?</label>
+              <button type="button" class="btn btn-primary pull-right" onclick="App.publishForm()">Publish something!</button>
+  
+              <div id="publishDiv" style="display: none;">
+                <br />
+                <input type="text" class="form-control" id="publishTitleInput" placeholder="Insert the title" />
+                <input type="text" class="form-control" id="publishAuthorInput" placeholder="Insert your author's nickname" />
+                <select class="form-control" id="genreSelect">
+                    <option value="photo">Photo</option>
+                    <option value="song">Song</option>
+                    <option value="video">Video</option>
+                </select>
+                <br />
+                <button type="button" class="btn btn-primary" onclick="App.addContent()">Publish</button>
+              </div>
+              <hr />
+            </form>
+
+
+          </div> <!-- end contentUI-->
+
+        </div> <!-- end Main UI -->
+
+      </div> <!-- end Row -->
+
+
 
       <!-- Buy Modal, popup -->
       <div id="buyModal" class="modal fade" role="dialog">
@@ -142,9 +168,9 @@
           </div>
 
         </div>
-      </div>
+      </div> <!-- End modal -->
 
-    </div>
+    </div> <!-- End Container -->
 
     <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>

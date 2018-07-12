@@ -32,6 +32,7 @@ contract Catalog {
 
     mapping(address => uint) premiumUsers;
     mapping(bytes32 => BaseContentManagement) public contentMap;
+    // author => content
     mapping(bytes32 => bytes32) latestAuthorMap;
     mapping(bytes32 => bytes32) latestGenreMap;
     mapping(bytes32 => bytes32) mostPopularAuthorMap;
@@ -41,12 +42,14 @@ contract Catalog {
 
     enum Categories { Quality, PriceFairness, Rewatchable, FamilyFriendly } 
     uint constant public numCategories = 4;
-    uint public minRate = 1;
-    uint public maxRate = 10;
+    uint constant public minRate = 1;
+    uint constant public maxRate = 10;
 
-    bytes32 public mostRatedContent;
-    mapping(bytes32 => bytes32) public mostRatedByAuthor;
-    mapping(bytes32 => bytes32) public mostRatedByGenre;
+
+    mapping(uint8 => bytes32) public mostRatedContent;
+    // author => (category => content)
+    mapping(bytes32 => mapping(uint8 => bytes32)) public mostRatedByAuthor;
+    mapping(bytes32 => mapping(uint8 => bytes32)) public mostRatedByGenre;
     
         
     ///////////////////////////////////////////////////////////////////
@@ -87,6 +90,16 @@ contract Catalog {
     /// @notice check wheter the content is not deployed yet
     modifier isNotDeployed(address _content) {
         require(_content == address(0x0), "Content already deployed");
+        _;
+    }
+    
+    // TODO doc
+    modifier validCategory(uint _category) {
+        require(_category == uint(Categories.Quality) ||
+                _category == uint(Categories.PriceFairness) ||
+                _category == uint(Categories.Rewatchable) ||
+                _category == uint(Categories.FamilyFriendly), "Invalid cateogry");
+                
         _;
     }
     
@@ -250,31 +263,53 @@ contract Catalog {
     }
     
     
-    
-    function notifyRating(bytes32 _content) external {
+    // TODO CONTROLLA BENE
+    function notifyRating(bytes32 _content, uint8 _category) external {
         
         // TODO use modifier for this
         require(msg.sender == address(contentMap[_content]), "Caller isn't the content's manager");
 
         // TODO fire event
         
-        // Update most rated by author
         uint _popularRate = 0;
+
+        
+        // Most rated in general
+        bytes32 _bestRated = mostRatedContent[_category];
+        
+        if(_bestRated == 0x0) {
+            // First rating
+            mostRatedContent[_category] = _content;
+            // TODO fire event
+        }
+        else {
+            
+            _popularRate = contentMap[_bestRated].getRate(_category);
+            
+            if(contentMap[_content].getRate(_category) > _popularRate) {
+                
+                mostRatedContent[_category] = _content;
+                // TODO event
+            }
+        }
+        
+    
+        // Update most rated by author
         bytes32 _author = contentMap[_content].author();
-        bytes32 _bestRatedByAuhtor = mostRatedByAuthor[_author];
+        bytes32 _bestRatedByAuhtor = mostRatedByAuthor[_author][_category];
 
         if(_bestRatedByAuhtor == 0x0) {
-            // First access to a content of that author
-            mostRatedByAuthor[_author] = _content;
+            // First rating to a content of that author
+            mostRatedByAuthor[_author][_category] = _content;
             // TODO event
         }
         else {
 
-            _popularRate = contentMap[_bestRatedByAuhtor].getRate();
+            _popularRate = contentMap[_bestRatedByAuhtor].getRate(_category);
             
-            if(contentMap[_content].getRate() > _popularRate) {
+            if(contentMap[_content].getRate(_category) > _popularRate) {
                 
-                mostRatedByAuthor[_author] = _content;
+                mostRatedByAuthor[_author][_category] = _content;
                 // TODO event
             }
         }
@@ -282,20 +317,20 @@ contract Catalog {
 
         // Update current most popular content of the author
         bytes32 _genre = contentMap[_content].getGenre();
-        bytes32 _bestRatedByGenre = mostRatedByGenre[_author];
+        bytes32 _bestRatedByGenre = mostRatedByGenre[_author][_category];
 
         if(_bestRatedByGenre == 0x0) {
-            // First access to a content of that author
-            mostRatedByGenre[_genre] = _content;
+            // First rating to a content of that author
+            mostRatedByGenre[_genre][_category] = _content;
             // TODO event
         }
         else {
 
-            _popularRate = contentMap[_bestRatedByGenre].getRate();
+            _popularRate = contentMap[_bestRatedByGenre].getRate(_category);
             
-            if(contentMap[_content].getRate() > _popularRate) {
+            if(contentMap[_content].getRate(_category) > _popularRate) {
                 
-                mostRatedByGenre[_genre] = _content;
+                mostRatedByGenre[_genre][_category] = _content;
                 // TODO event
             }
         }
@@ -401,7 +436,29 @@ contract Catalog {
         return mostPopularAuthorMap[_author];
     }
 
-    
+
+    // TODO comments
+    function getMostRated(uint8 _category) external view validCategory(_category) 
+                                                            returns(bytes32) {
+        
+        return mostRatedContent[_category];
+    }    
+
+
+    function getMostRatedByAuthor(bytes32 _author, uint8 _category) external view 
+                                                                    validCategory(_category) 
+                                                                    returns(bytes32) {
+        
+        return mostRatedByAuthor[_author][_category];
+    }    
+
+
+    function getMostRatedByGenre(bytes32 _genre, uint8 _category) external view 
+                                                                validCategory(_category)    
+                                                                returns(bytes32) {
+        
+        return mostRatedByGenre[_genre][_category];
+    }    
 
         ///////////////////////////////////
         ///         Self Destruct       ///

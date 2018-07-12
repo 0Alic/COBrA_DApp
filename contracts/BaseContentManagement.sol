@@ -1,6 +1,7 @@
 pragma solidity ^0.4.18;
 
 import "./Catalog.sol";
+import "./EnumLib.sol";
 
 contract BaseContentManagement {
     
@@ -13,6 +14,10 @@ contract BaseContentManagement {
     
     mapping(address => bool) public accessRightMap;
     
+    // Rating information
+    uint public constant SUM = 0;
+    uint public constant TIMES = 1;
+    uint[2][] public ratingMap;
     
     /// @notice Check if the caller is the Catalog
     modifier isCatalog() {
@@ -36,6 +41,17 @@ contract BaseContentManagement {
     }
 
 
+    modifier validRating(uint[] _ratings) {
+    
+        require(_ratings.length == catalog.numCategories(), "Rating array not valid");
+
+        for(uint i=0; i<_ratings.length; i++) {
+            require(_ratings[i] >= 1, "Invalid lower bound rating");
+            require(_ratings[i] <= 10, "Invalid upper bound rating");
+        }
+        _;
+    }
+    
     // @notice returns the type of the content
     // @returns the genre of the content
     function getGenre() public pure returns(bytes32);
@@ -51,6 +67,8 @@ contract BaseContentManagement {
         author = _author;
         title = _title;
         
+        ratingMap = new uint[2][](catalog.numCategories());
+
         views = 0;
     }
     
@@ -75,5 +93,39 @@ contract BaseContentManagement {
         else {
             catalog.notifyConsumption(title, msg.sender, true);
         }
+    }
+    
+    
+    function rateContent(uint[] ratings) external validRating(ratings) {
+        
+        ratingMap[uint(Catalog.Categories.Quality)][SUM] += ratings[uint(Catalog.Categories.Quality)];
+        ratingMap[uint(Catalog.Categories.PriceFairness)][SUM] += ratings[uint(Catalog.Categories.PriceFairness)];
+        ratingMap[uint(Catalog.Categories.Rewatchable)][SUM] += ratings[uint(Catalog.Categories.Rewatchable)];
+        ratingMap[uint(Catalog.Categories.FamilyFriendly)][SUM] += ratings[uint(Catalog.Categories.FamilyFriendly)];
+
+        ratingMap[uint(Catalog.Categories.Quality)][TIMES] ++;
+        ratingMap[uint(Catalog.Categories.PriceFairness)][TIMES] ++;
+        ratingMap[uint(Catalog.Categories.Rewatchable)][TIMES] ++;
+        ratingMap[uint(Catalog.Categories.FamilyFriendly)][TIMES] ++;
+    }
+    
+    function getRate() external view returns(uint) {
+        
+        uint sum = 0;
+        uint times = 0;
+        
+        for(uint i=0; i<ratingMap.length; i++){
+            
+            sum += ratingMap[i][SUM];
+            times += ratingMap[i][TIMES];
+        }
+    
+        uint rate = uint(sum / times) + 1;
+
+        // since uint are truncated, it will be hard to get 10 without having only 10s
+        // so the avg is raised by one, but we could get 11 if we have only 10s
+        if(rate == 11) rate = 10; 
+        
+        return rate;
     }
 }

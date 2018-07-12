@@ -38,8 +38,17 @@ contract Catalog {
     mapping(bytes32 => bytes32) mostPopularGenreMap;
     
     bytes32[] contentList;
+
+    enum Categories { Quality, PriceFairness, Rewatchable, FamilyFriendly } 
+    uint constant public numCategories = 4;
+    uint public minRate = 1;
+    uint public maxRate = 10;
+
+    bytes32 public mostRatedContent;
+    mapping(bytes32 => bytes32) public mostRatedByAuthor;
+    mapping(bytes32 => bytes32) public mostRatedByGenre;
     
-    
+        
     ///////////////////////////////////////////////////////////////////
     ///////                     Modifiers                       ///////
     ///////////////////////////////////////////////////////////////////
@@ -178,6 +187,7 @@ contract Catalog {
     
     /// @notice Get a notification from a content manager that it was consumed
     /// @param _content the calling contract
+    /// @param _user the sender
     /// @param _premiumView if the content was consumed by a premium user
     /// @dev this function should be called only by a ContentManagement contract
     function notifyConsumption(bytes32 _content, address _user, bool _premiumView) external {
@@ -236,6 +246,58 @@ contract Catalog {
             
             contentMap[_content].authorAddress().transfer(authorReward);
             emit AuthorPayed(contentMap[_content].author()); 
+        }
+    }
+    
+    
+    
+    function notifyRating(bytes32 _content) external {
+        
+        // TODO use modifier for this
+        require(msg.sender == address(contentMap[_content]), "Caller isn't the content's manager");
+
+        // TODO fire event
+        
+        // Update most rated by author
+        uint _popularRate = 0;
+        bytes32 _author = contentMap[_content].author();
+        bytes32 _bestRatedByAuhtor = mostRatedByAuthor[_author];
+
+        if(_bestRatedByAuhtor == 0x0) {
+            // First access to a content of that author
+            mostRatedByAuthor[_author] = _content;
+            // TODO event
+        }
+        else {
+
+            _popularRate = contentMap[_bestRatedByAuhtor].getRate();
+            
+            if(contentMap[_content].getRate() > _popularRate) {
+                
+                mostRatedByAuthor[_author] = _content;
+                // TODO event
+            }
+        }
+
+
+        // Update current most popular content of the author
+        bytes32 _genre = contentMap[_content].getGenre();
+        bytes32 _bestRatedByGenre = mostRatedByGenre[_author];
+
+        if(_bestRatedByGenre == 0x0) {
+            // First access to a content of that author
+            mostRatedByGenre[_genre] = _content;
+            // TODO event
+        }
+        else {
+
+            _popularRate = contentMap[_bestRatedByGenre].getRate();
+            
+            if(contentMap[_content].getRate() > _popularRate) {
+                
+                mostRatedByGenre[_genre] = _content;
+                // TODO event
+            }
         }
     }
     

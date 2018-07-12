@@ -11,8 +11,8 @@ App = {
     premiumCost: 40000000000000000,
     contentCost: 1000000000000000,
     oneEther: 1000000000000000000,
-    lastBlock: 0,
-    listenPeriod: 5,    // app listens for events on the last 5 blocks
+    initBlock: 0,
+    listenPeriod: 15,    // app listens for events on the last 5 blocks
 
 
     ////////////////////////////////////////////
@@ -34,6 +34,15 @@ App = {
             App.web3Provider = new Web3.providers.HttpProvider('http://localhost:8545');
             web3 = new Web3(App.web3Provider);
         }
+
+        // Load account data
+        web3.eth.getCoinbase(function(err, account) {
+            if(err == null) {
+                App.account = account;
+                $("#accountAddress").html("Your Account: " + account);
+            }
+        });
+
         return App.initContract();
     },
 
@@ -82,58 +91,64 @@ App = {
                 ////
 
                 const from = block - App.listenPeriod;
+                App.initBlock = block;
+                
                 if(from < 0) from = 0;
-
+                
                 // Access
-                instance.UserAccess({}, {fromBlock: from, toBlock: 'latest'}).watch(function(error, event) { // Event subscription
-                    // Whenever the event is triggered
-                    console.log("Access to " + event.args._user + " " + web3.toUtf8(event.args._content));
+                instance.UserAccess({}, {fromBlock: App.initBlock, toBlock: 'latest'}).watch(function(error, event) { // Event subscription
+                    if(event.args._user)
+                        alert("Wow, you have now access to " + web3.toUtf8(event.args._content) + "!");
                 });
 
                 // Consumption
                 instance.UserConsume({}, {fromBlock: from, toBlock: 'latest'}).watch(function(error, event) { // Event subscription
 
-                    // Whenever the event is triggered
-                    const content = web3.toUtf8(event.args._content);
-                    const address = "" + event.args._user;
-                    const l = address.length;
-                    const stubAddr = address.charAt(0) + address.charAt(1) + address.charAt(2) + address.charAt(3) +
-                                     "..." + 
-                                     address.charAt(l-1) + address.charAt(l-2) + address.charAt(l-3) + address.charAt(l-4);
+                    if(!error) {
 
-                    console.log("Consumption " + address + " " + content);
-
-                    const s = stubAddr + " has viewed " + content;
-                    var contentTemplate ="<tr><td>" + s + "</td></tr>";
-                    $('#notificationList').append(contentTemplate);
+                        const content = web3.toUtf8(event.args._content);
+                        const address = event.args._user.toString();
+                        addUserNotification(address, "has viewed", content);
+                        console.log("Consumption " + address + " " + content);
+                    }
                 });
 
                 // New Popular/Latest
                 // TODO filter authors/genres
-                instance.NewPopularByAuthor().watch(function(error, event) {
+                instance.NewPopularByAuthor({}, {fromBlock: from, toBlock: 'latest'}).watch(function(error, event) {
 
-                    if(!error)
-                        updateNotification("The best of ", event.args._author, event.args._content);
+                    if(!error) {
+
+                        appendNotification(web3.toUtf8(event.args._author), "has a new popular content:", web3.toUtf8(event.args._content));
+//                        console.log("New popular of " + address + ": " + web3.toUtf8(event.args._author));
+                    }
                 });
 
 
-                instance.NewPopularByGenre().watch(async(error, event) => {
+                instance.NewPopularByGenre({}, {fromBlock: from, toBlock: 'latest'}).watch(async(error, event) => {
 
-                    if(!error)
-                        updateNotification("Top of the", event.args._genre, event.args._content);
+                    if(!error){
+
+                        appendNotification(web3.toUtf8(event.args._genre), "has a new popular content:", web3.toUtf8(event.args._content));
+//                        console.log("New popular of " + web3.toUtf8(event.args.genre) + ": " + content);
+                    }
                 });
                 
 
-                instance.NewLatestByAuthor().watch(function(error, event) {
+                instance.NewLatestByAuthor({}, {fromBlock: from, toBlock: 'latest'}).watch(function(error, event) {
 
-                    if(!error)
-                        updateNotification("Check the last entry of ", event.args._author, event.args._content);
+                    if(!error){
+                        appendNotification(web3.toUtf8(event.args._author), "published a new content:", web3.toUtf8(event.args._content));
+//                        console.log("New latest of " + web3.toUtf8(event.args._author) + ": " + content);
+                    }
                 });
 
-                instance.NewLatestByGenre().watch(function(error, event) {
+                instance.NewLatestByGenre({}, {fromBlock: from, toBlock: 'latest'}).watch(function(error, event) {
 
-                    if(!error)
-                        updateNotification("Don't miss this ", event.args._author, event.args._content);
+                    if(!error){
+                        appendNotification(web3.toUtf8(event.args._genre), "has a new content:", web3.toUtf8(event.args._content));
+//                        console.log("New latest of " + web3.toUtf8(event.args._genre) + ": " + content);
+                    }
                 });
             });
         })
@@ -157,14 +172,6 @@ App = {
         authorUI.hide();
         loader.show();
         
-        // Load account data
-        web3.eth.getCoinbase(function(err, account) {
-            if(err == null) {
-                App.account = account;
-                $("#accountAddress").html("Your Account: " + account);
-            }
-        });
-
         // Load contract Data
         App.contracts.Catalog.deployed().then(async (instance) => {
 
@@ -627,4 +634,24 @@ $(function() {
 function updateNotification(defaultText, author, content) {
     
     $("#notification").html("<b>" + defaultText +"</b> " + web3.toUtf8(author) + "<b> ::: </b>" + web3.toUtf8(content));
+}
+
+
+
+function addUserNotification(address, middleText, content) {
+
+    // Whenever the event is triggered
+    const l = address.length;
+    const stubAddr = address.charAt(0) + address.charAt(1) + address.charAt(2) + address.charAt(3) +
+                        "..." + 
+                        address.charAt(l-1) + address.charAt(l-2) + address.charAt(l-3) + address.charAt(l-4);
+
+    appendNotification(stubAddr, middleText, content);
+}
+
+function appendNotification(from, middleText, content) {
+
+    const s = from + " " + middleText + " " + content;
+    var contentTemplate ="<tr><td>" + s + "</td></tr>";
+    $('#notificationList').append(contentTemplate);
 }

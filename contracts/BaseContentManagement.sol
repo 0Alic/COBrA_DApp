@@ -115,12 +115,18 @@ contract BaseContentManagement {
     
     function getRate(uint _category) external view validCategory(_category) returns(uint)  {
         
-        uint rate = uint(ratingMap[_category][SUM] / ratingMap[_category][TIMES]) + 1;
-
-        // since uint are truncated, it will be hard to get 10 without having only 10s
-        // so the avg is raised by one, but we could get 11 if we have only 10s
-        if(rate == 11) rate = 10; 
-        
-        return rate;
+        if(ratingMap[_category][TIMES] == 0)
+            return 0;
+        else 
+            return uint(ratingMap[_category][SUM] / ratingMap[_category][TIMES]);
     }
+
+    function getSum(uint _category) external view returns(uint)  {
+        return ratingMap[_category][SUM];       
+    }
+
+    function getTimes(uint _category) external view returns(uint)  {
+        return ratingMap[_category][TIMES];       
+    }
+
 }

@@ -11,6 +11,7 @@ App = {
     premiumCost: 40000000000000000,
     contentCost: 1000000000000000,
     oneEther: 1000000000000000000,
+    categories: {Quality: 0, PriceFairness: 1, Rewatchable: 2, FamilyFriendly: 3},
     initBlock: 0,
     listenPeriod: 15,    // app listens for events on the last 5 blocks
 
@@ -596,12 +597,21 @@ App = {
             const genre = web3.toUtf8(await contentManager.getGenre());
             const views = await contentManager.views();
             const access = await contentManager.accessRightMap(App.account);
+            const quality = await contentManager.getRate(App.categories.Quality); 
+            const priceFair = await contentManager.getRate(App.categories.PriceFairness); 
+            const rewatch = await contentManager.getRate(App.categories.Rewatchable); 
+            const family = await contentManager.getRate(App.categories.FamilyFriendly); 
 
             const str = "<h3>Content's details:</h3></br>" +
-                        "<b>Title:</b>: " + title +
+                        "<b>Title:</b> " + title +
                         "</br><b>Author:</b> " + author + 
-                        "</br><b>Genre:</b>: " + genre + 
-                        "</br><b>Views:</b>: " + views;
+                        "</br><b>Genre:</b> " + genre + 
+                        "</br><b>Views:</b> " + views +
+                        "</br>" +
+                        "</br><b>Quality:</b> " + quality +
+                        "</br><b>Price Fairness:</b> " + priceFair +
+                        "</br><b>Rewatchable:</b> " + rewatch +
+                        "</br><b>Family Friendly:</b> " + family;
 
             popupBody.html(str);
 

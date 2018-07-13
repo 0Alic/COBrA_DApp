@@ -80,23 +80,30 @@ module.exports = function(deployer) {
         // Add some visual
         await catalog.getContent(contentTitle2, {from: watcher1, value: contentCost});
         await content2.consumeContent({from: watcher1});
-//        await catalog.rateContent();
+        await catalog.rateContent(contentTitle2, [5,6,7,8], {from: watcher1});
         await catalog.getContent(contentTitle2, {from: watcher1, value: contentCost});
         await content2.consumeContent({from: watcher1});
+        await catalog.rateContent(contentTitle2, [7,7,7,8], {from: watcher1});
 
         await catalog.getContent(contentTitle3, {from: watcher2, value: contentCost});
         await content3.consumeContent({from: watcher2});
+        await catalog.rateContent(contentTitle3, [8,8,7,4], {from: watcher2});
         await catalog.getContent(contentTitle1, {from: watcher1, value: contentCost});
         await content1.consumeContent({from: watcher1});
+        await catalog.rateContent(contentTitle1, [4,4,3,10], {from: watcher1});
 
         await catalog.getContent(contentTitle41, {from: watcher1, value: contentCost});
         await catalog.getContent(contentTitle41, {from: watcher2, value: contentCost});
         await content41.consumeContent({from: watcher1});
+        await catalog.rateContent(contentTitle41, [8,6,8,4], {from: watcher1});
         await content41.consumeContent({from: watcher2});
+        await catalog.rateContent(contentTitle41, [8,6,9,4], {from: watcher2});
         await catalog.getContent(contentTitle41, {from: watcher1, value: contentCost});
         await catalog.getContent(contentTitle41, {from: watcher2, value: contentCost});
         await content41.consumeContent({from: watcher1});
+        await catalog.rateContent(contentTitle41, [9,4,8,6], {from: watcher1});
         await content41.consumeContent({from: watcher2});
+        await catalog.rateContent(contentTitle41, [8,8,10,4], {from: watcher2});
         await catalog.getContent(contentTitle41, {from: watcher1, value: contentCost});
         await catalog.getContent(contentTitle41, {from: watcher2, value: contentCost});
         await content41.consumeContent({from: watcher1});
@@ -105,6 +112,8 @@ module.exports = function(deployer) {
         await catalog.getContent(contentTitle42, {from: watcher1, value: contentCost});
         await catalog.getContent(contentTitle42, {from: watcher2, value: contentCost});
         await content42.consumeContent({from: watcher1});
+        await catalog.rateContent(contentTitle42, [5,4,6,4], {from: watcher2});
         await content42.consumeContent({from: watcher2});
+        await catalog.rateContent(contentTitle42, [10,7,10,6], {from: watcher2});
     }); 
 };

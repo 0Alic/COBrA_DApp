@@ -112,6 +112,10 @@ App = {
                         const address = event.args._user.toString();
                         addUserNotification(address, "has viewed", content);
                         console.log("Consumption " + address + " " + content);
+
+                        if(address == App.account)
+                            if(confirm("Would you like to leave a feedback to " + content + "?"))
+                                App.showRatingPopup(content);
                     }
                 });
 
@@ -244,7 +248,6 @@ App = {
             contentBytes = web3.fromUtf8(content);
             alert("REMINDER: You are buying the content " + content + " at the cost of " +
                 App.contentCost / App.oneEther + " ether. Confirm or reject the transation on metamask.");
-
 
             transaction = await instance.getContent(contentBytes ,{from: App.account, value: App.contentCost});
             console.log("Content got");
@@ -479,7 +482,7 @@ App = {
                             " - Not enough balance;\n"+
                             " - Increase gas limit.";
             alert(errorS);
-        });;
+        });
 
         // TODO Fare in modo che un autore possa linkare il contratto a piacere
 
@@ -557,10 +560,6 @@ App = {
             buyBtn.click({param: content}, function(event) {
                 App.buyContentPremium(event.data.param);
                 console.log("Buy " + event.data.param);
-                buyBtn.unbind("click");
-                consumeBtn.unbind("click");
-                buyGiftBtn.unbind("click");
-
             });
         }
         else {
@@ -568,7 +567,6 @@ App = {
             buyBtn.click({param: content}, function(event) {
                 App.buy(event.data.param);
                 console.log("Buy " + event.data.param);
-                unbindClick(buyBtn, consumeBtn, buyGiftBtn);
             });
         }
 
@@ -576,13 +574,11 @@ App = {
             
             App.consume(event.data.param);
             console.log("consume " + event.data.param);
-            unbindClick(buyBtn, consumeBtn, buyGiftBtn);
         });
 
         buyGiftBtn.click({param: content}, function(event) {
             App.giftContent(event.data.param);
             console.log("buy gift  " + event.data.param);
-            unbindClick(buyBtn, consumeBtn, buyGiftBtn);
         });
         
 
@@ -602,18 +598,21 @@ App = {
             const rewatch = await contentManager.getRate(App.categories.Rewatchable); 
             const family = await contentManager.getRate(App.categories.FamilyFriendly); 
 
-            const str = "<h3>Content's details:</h3></br>" +
+            let str = "<h3>Content's details:</h3></br>" +
                         "<b>Title:</b> " + title +
                         "</br><b>Author:</b> " + author + 
                         "</br><b>Genre:</b> " + genre + 
                         "</br><b>Views:</b> " + views +
-                        "</br>" +
-                        "</br><b>Quality:</b> " + quality +
-                        "</br><b>Price Fairness:</b> " + priceFair +
-                        "</br><b>Rewatchable:</b> " + rewatch +
-                        "</br><b>Family Friendly:</b> " + family;
+                        "</br>";
+
+            str += loadRating();
 
             popupBody.html(str);
+
+            $('#rateDiv > #qualityRate').html(createRateOfContent(quality));
+            $('#rateDiv > #priceRate').html(createRateOfContent(priceFair));
+            $('#rateDiv > #rewatchRate').html(createRateOfContent(rewatch));
+            $('#rateDiv > #familyRate').html(createRateOfContent(family));
 
             if(access) {
                 buyBtn.hide();
@@ -624,6 +623,88 @@ App = {
                 consumeBtn.hide();
             }
         });
+    },
+
+    ////////////////////////////////////////////
+    ////         Show Content Popup         ////
+    ////////////////////////////////////////////
+
+    // Color the rating stars
+    add: function(ths, sno, category){
+
+        for (var i=1;i<=10;i++) {
+            var cur = $('#star'+category+''+i);
+            cur.removeClass("checked");
+        }
+
+        for (var i=1;i<=sno;i++) {
+            var cur = $('#star'+category+''+i);
+            if(cur.hasClass("fa fa-star")) {
+                cur.addClass("fa fa-star checked");
+            }
+        }
+    },
+
+    get: function(category) {
+
+        var count = 0;
+
+        for(var i=1; i<=10; i++) {
+
+            var cur = $('#star'+category+''+i);
+            if(cur.hasClass("checked"))  count++;
+        }
+
+        return count;
+    },
+
+    /**
+     * Show the popup with all the information about a content, and the possibility to buy it
+     */
+    showRatingPopup: function(content) {
+
+        $('#rateModal').modal();
+
+        const popupBody = $(".modal-body");
+        const rateBody = $("#toRateDiv");
+
+        rateBody.html(loadRating());
+        $('#toRateDiv > #qualityRate').html(createRating("quality"));
+        $('#toRateDiv > #priceRate').html(createRating("price"));
+        $('#toRateDiv > #rewatchRate').html(createRating("rewatch"));
+        $('#toRateDiv > #familyRate').html(createRating("family"));        
+
+        popupBody.html("<h2>"+content+"</h2>");
+
+        $('.btn-rate').click({param: content}, function(event) {
+            
+            App.rateContent(event.data.param);
+            console.log("rated " + event.data.param);
+            $('.btn-rate').unbind("click");
+        });
+    },
+
+    rateContent: function(content) {
+
+        const quality = App.get('quality');
+        const price = App.get('price');
+        const rewatch = App.get('rewatch');
+        const family = App.get('family');
+        
+        
+        App.contracts.Catalog.deployed().then(async(instance) => {
+           
+            alert("REMINDER: You are rating the content " + content + "Confirm or reject the transation on metamask.");
+            await instance.rateContent(web3.fromUtf8(content), [quality, price, rewatch, family]);
+
+        }).catch(function(error) {
+            console.log(error);
+            const errorS = "Error while processing, possible reasons:\n"+
+                            " - One input field not valid;\n"+
+                            " - Not enough balance;\n"+
+                            " - Increase gas limit.";
+            alert(errorS);
+        });
     }
 };
 
@@ -633,12 +714,6 @@ $(function() {
         App.init();
     });
 });
-
-// Helper function
-function unbindClick() {
-
-    arguments.forEach(element => { element.unbind("click");});
-}
 
 
 function addUserNotification(address, middleText, content) {
@@ -657,4 +732,56 @@ function appendNotification(from, middleText, content) {
     const s = from + " " + middleText + " " + content;
     var contentTemplate ="<tr><td>" + s + "</td></tr>";
     $('#notificationList').append(contentTemplate);
+}
+
+function loadRating() {
+
+    const s = '<label class="pull-left">Quality:</label>' +
+                '<div id="qualityRate" class="pull-right"></div>' +
+                '</br></br>' +
+                '<label class="pull-left">Price Fairness:</label>'+
+                '<div id="priceRate" class="pull-right"></div>'+
+                '</br></br>' +
+                '<label class="pull-left">Rewatchable:</label>'+
+                '<div id="rewatchRate" class="pull-right"></div>'+
+                '</br></br>' +
+                '<label class="pull-left">Family Friendly:</label>'+
+                '<div id="familyRate" class="pull-right"></div>'+
+                '</br>';
+    return s;
+}
+
+function createRateOfContent(rate) {
+
+    let s = "";
+    let i=1;
+    
+    for(; i<=rate; i++) 
+        s += createStar(i, false, 'checked');
+
+    for(; i<=10; i++) 
+        s += createStar(i, false, '');
+
+    return s;
+}
+
+function createRating(category) {
+
+    let s = "";
+    s += createStar(1, true, 'checked', category);
+
+    for(var i=2; i<=10; i++) 
+        s += createStar(i, true, '', category);
+
+    return s;
+}
+
+function createStar(pos, interactible, checked, category) {
+
+    const id = 'star' + category + '' + pos; 
+
+    if(interactible)
+        return '<span class="fa fa-star ' + checked + '" id="' + id + '" onclick="App.add(this,'+pos+', \''+category+'\')" style="cursor: pointer"></span>';
+    else
+        return '<span class="fa fa-star ' + checked + '"></span>';
 }

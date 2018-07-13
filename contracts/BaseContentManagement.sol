@@ -120,13 +120,4 @@ contract BaseContentManagement {
         else 
             return uint(ratingMap[_category][SUM] / ratingMap[_category][TIMES]);
     }
-
-    function getSum(uint _category) external view returns(uint)  {
-        return ratingMap[_category][SUM];       
-    }
-
-    function getTimes(uint _category) external view returns(uint)  {
-        return ratingMap[_category][TIMES];       
-    }
-
 }

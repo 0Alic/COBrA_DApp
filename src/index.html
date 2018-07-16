@@ -94,15 +94,31 @@
                 <hr />  
             </form>
             
-            <!-- Most popular informations -->
+            <!-- Filter user's needs -->
             <form onSubmit="App.filter(); return false;">
               <div class="form-group">
-                <label for="filterSelect">Filters</label>
+                <label for="filterSelect">Choose your filters to personalize your notification system</label>
                 <select class="form-control" id="filterSelect">
+                    <option value="authorFilter">Filter by author</option>
+                    <option value="genreFilter">Filter by genre</option>
+                </select>
+                <input type="text" class="form-control" id="filterInput" placeholder="author or genre" />
+              </div>
+              <button type="submit" class="btn btn-primary">Add Filter</button>
+              <hr />
+            </form>
+
+
+            <!-- Most popular informations -->
+            <form onSubmit="App.getInfo(); return false;">
+              <div class="form-group">
+                <label for="getInfoSelect">Need some idea?</label>
+                <select class="form-control" id="getInfoSelect">
                     <option value="authorPop">Most Popular of author</option>
                     <option value="genrePop">Most Popular of genre</option>
                     <option value="authorLate">Latest of author</option>
                     <option value="genreLate">Latest of genre</option>
+                    <!-- TODO add categories -->
                 </select>
                 <input type="text" class="form-control" id="mostPopular" placeholder="author or genre" />
               </div>
@@ -110,8 +126,7 @@
               <label id="filterResult"></label>
               <hr />
             </form>
-
-
+            
             <!-- Auhtor's -->
             <form id="authorUI">
               <label>Want to be part of COBrA?</label>

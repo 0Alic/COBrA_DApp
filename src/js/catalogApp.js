@@ -8,8 +8,8 @@ App = {
     contracts: {},
     account: '0x0',
     isPremium: false,
-    categories: {Quality: 0, PriceFairness: 1, Rewatchable: 2, FamilyFriendly: 3}, // To remove
-    categoriesInv: {0: "Quality",1: "PriceFairness",2: "Rewatchable",3: "FamilyFriendly"},
+//    categories: {Quality: 0, PriceFairness: 1, Rewatchable: 2, FamilyFriendly: 3}, // To remove
+    categories: {0: "Quality",1: "PriceFairness",2: "Rewatchable",3: "FamilyFriendly"},
     initBlock: 0,
     listenPeriod: 25,    // app listens for events on the last 5 blocks
 
@@ -171,7 +171,7 @@ App = {
                 instance.NewBestRated({}, {fromBlock: from, toBlock: 'latest'}).watch(function(error, event) {
 
                     if(!error)
-                        console.log("Event for " + event.args._content + ": " + App.categoriesInv[event.args._category]);
+                        console.log("Event for " + event.args._content + ": " + App.categories[event.args._category]);
                 });
 
                 // Author payed
@@ -530,7 +530,7 @@ App = {
     /**
      * Get inforamtion about a most popular or latest published content 
      */
-    filter: function() {
+    getInfo: function() {
 
         var input = $('#mostPopular');
         var selector = $('#filterSelect');
@@ -566,6 +566,17 @@ App = {
         });     
     },
 
+
+
+    ////////////////////////////////////////////
+    ////         Show Content Popup         ////
+    ////////////////////////////////////////////
+
+
+    filter: function() {
+
+
+    },
 
     ////////////////////////////////////////////
     ////         Show Content Popup         ////
@@ -630,10 +641,10 @@ App = {
             const price = web3.fromWei(await contentManager.price(), 'ether');
             const views = await contentManager.views();
             const access = await contentManager.accessRightMap(App.account);
-            const quality = await contentManager.getRate(App.categories.Quality); 
-            const priceFair = await contentManager.getRate(App.categories.PriceFairness); 
-            const rewatch = await contentManager.getRate(App.categories.Rewatchable); 
-            const family = await contentManager.getRate(App.categories.FamilyFriendly); 
+            const quality = await contentManager.getRate(0); // Quality
+            const priceFair = await contentManager.getRate(1); // Price Fairness
+            const rewatch = await contentManager.getRate(2); // Rewatchable
+            const family = await contentManager.getRate(3); // Family Friendly
 
             let str = "<h3>Content's details:</h3></br>" +
                         "<b>Title:</b> " + title +

@@ -15,6 +15,10 @@ contract Catalog {
     event NewPopularByGenre(bytes32 _genre, bytes32 _content);
     event NewLatestByAuthor(bytes32 _author, bytes32 _content);
     event NewLatestByGenre(bytes32 _genre, bytes32 _content);
+    event ContentRated(bytes32 _content, uint8 _category);
+    event NewBestRated(bytes32 _content, uint8 _category);
+    event NewBestRatedByAuthor(bytes32 _author, bytes32 _content, uint8 _category);
+    event NewBestRatedByGenre(bytes32 _genre, bytes32 _content, uint8 _category);
     event AuthorPayed(bytes32 _author);
     event COBrAShutDown();
     
@@ -286,8 +290,7 @@ contract Catalog {
         // TODO use modifier for this
         require(msg.sender == address(contentMap[_content]), "Caller isn't the content's manager");
 
-        // TODO fire event
-        
+        emit ContentRated(_content, _category);
         uint _popularRate = 0;
 
         
@@ -297,7 +300,7 @@ contract Catalog {
         if(_bestRated == 0x0) {
             // First rating
             mostRatedContent[_category] = _content;
-            // TODO fire event
+            emit NewBestRated(_content, _category);
         }
         else {
             
@@ -306,7 +309,7 @@ contract Catalog {
             if(contentMap[_content].getRate(_category) > _popularRate) {
                 
                 mostRatedContent[_category] = _content;
-                // TODO event
+                emit NewBestRated(_content, _category);
             }
         }
         
@@ -318,7 +321,7 @@ contract Catalog {
         if(_bestRatedByAuhtor == 0x0) {
             // First rating to a content of that author
             mostRatedByAuthor[_author][_category] = _content;
-            // TODO event
+            emit NewBestRatedByAuthor(_author, _content, _category);
         }
         else {
 
@@ -327,7 +330,7 @@ contract Catalog {
             if(contentMap[_content].getRate(_category) > _popularRate) {
                 
                 mostRatedByAuthor[_author][_category] = _content;
-                // TODO event
+                emit NewBestRatedByAuthor(_author, _content, _category);
             }
         }
 
@@ -339,7 +342,7 @@ contract Catalog {
         if(_bestRatedByGenre == 0x0) {
             // First rating to a content of that author
             mostRatedByGenre[_genre][_category] = _content;
-            // TODO event
+            emit NewBestRatedByGenre(_genre, _content, _category);
         }
         else {
 
@@ -348,7 +351,7 @@ contract Catalog {
             if(contentMap[_content].getRate(_category) > _popularRate) {
                 
                 mostRatedByGenre[_genre][_category] = _content;
-                // TODO event
+                emit NewBestRatedByGenre(_genre, _content, _category);
             }
         }
     }

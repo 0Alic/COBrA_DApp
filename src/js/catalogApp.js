@@ -12,6 +12,7 @@ App = {
     contentCost: 1000000000000000,
     oneEther: 1000000000000000000,
     categories: {Quality: 0, PriceFairness: 1, Rewatchable: 2, FamilyFriendly: 3},
+    categoriesInv: {0: "Quality",1: "PriceFairness",2: "Rewatchable",3: "FamilyFriendly"},
     initBlock: 0,
     listenPeriod: 15,    // app listens for events on the last 5 blocks
 
@@ -99,22 +100,24 @@ App = {
                 
                 // Access
                 instance.UserAccess({}, {fromBlock: App.initBlock, toBlock: 'latest'}).watch(function(error, event) { // Event subscription
+                    
                     if(event.args._user)
-                        alert("Wow, you have now access to " + web3.toUtf8(event.args._content) + "!");
+                        alert("Wow, you have now access to " + web3.toUtf8(event.args._content) + "!"  + "    " +  block);
                 });
 
                 // Consumption
-                instance.UserConsume({}, {fromBlock: from, toBlock: 'latest'}).watch(function(error, event) { // Event subscription
+                instance.UserConsume({}, {fromBlock: App.initBlock, toBlock: 'latest'}).watch(function(error, event) { // Event subscription
 
                     if(!error) {
 
+                        
                         const content = web3.toUtf8(event.args._content);
                         const address = event.args._user.toString();
                         addUserNotification(address, "has viewed", content);
                         console.log("Consumption " + address + " " + content);
 
                         if(address == App.account)
-                            if(confirm("Would you like to leave a feedback to " + content + "?"))
+                            if(confirm("Would you like to leave a feedback to " + content + "?" + "    " +  block))
                                 App.showRatingPopup(content);
                     }
                 });
@@ -124,9 +127,7 @@ App = {
                 instance.NewPopularByAuthor({}, {fromBlock: from, toBlock: 'latest'}).watch(function(error, event) {
 
                     if(!error) {
-
                         appendNotification(web3.toUtf8(event.args._author), "has a new popular content:", web3.toUtf8(event.args._content));
-//                        console.log("New popular of " + address + ": " + web3.toUtf8(event.args._author));
                     }
                 });
 
@@ -134,9 +135,7 @@ App = {
                 instance.NewPopularByGenre({}, {fromBlock: from, toBlock: 'latest'}).watch(async(error, event) => {
 
                     if(!error){
-
                         appendNotification(web3.toUtf8(event.args._genre), "has a new popular content:", web3.toUtf8(event.args._content));
-//                        console.log("New popular of " + web3.toUtf8(event.args.genre) + ": " + content);
                     }
                 });
                 
@@ -145,7 +144,6 @@ App = {
 
                     if(!error){
                         appendNotification(web3.toUtf8(event.args._author), "published a new content:", web3.toUtf8(event.args._content));
-//                        console.log("New latest of " + web3.toUtf8(event.args._author) + ": " + content);
                     }
                 });
 
@@ -153,8 +151,14 @@ App = {
 
                     if(!error){
                         appendNotification(web3.toUtf8(event.args._genre), "has a new content:", web3.toUtf8(event.args._content));
-//                        console.log("New latest of " + web3.toUtf8(event.args._genre) + ": " + content);
                     }
+                });
+
+                // Categories events
+                instance.NewBestRated({}, {fromBlock: from, toBlock: 'latest'}).watch(function(error, event) {
+
+                    if(!error)
+                        console.log("Event for " + event.args._content + ": " + App.categoriesInv[event.args._category]);
                 });
             });
         })
@@ -694,7 +698,7 @@ App = {
         
         App.contracts.Catalog.deployed().then(async(instance) => {
            
-            alert("REMINDER: You are rating the content " + content + "Confirm or reject the transation on metamask.");
+            alert("REMINDER: You are rating the content " + content + ".Confirm or reject the transation on metamask.");
             await instance.rateContent(web3.fromUtf8(content), [quality, price, rewatch, family]);
 
         }).catch(function(error) {

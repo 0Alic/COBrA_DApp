@@ -14,9 +14,8 @@ contract BaseContentManagement {
     mapping(address => bool) public accessRightMap;
     
     // Rating information
-    uint public constant SUM = 0;
-    uint public constant TIMES = 1;
-    uint[2][] public ratingMap;
+    uint public times;
+    uint[] public ratingMap;
     
     /// @notice Check if the caller is the Catalog
     modifier isCatalog() {
@@ -65,8 +64,8 @@ contract BaseContentManagement {
         author = _author;
         title = _title;
         
-        ratingMap = new uint[2][](catalog.numCategories());
-
+        ratingMap = new uint[](catalog.numCategories());
+        times = 0;
         views = 0;
     }
     
@@ -96,15 +95,12 @@ contract BaseContentManagement {
     
     function rateContent(uint[] ratings) external isCatalog {
         
-        ratingMap[uint(Catalog.Categories.Quality)][SUM] += ratings[uint(Catalog.Categories.Quality)];
-        ratingMap[uint(Catalog.Categories.PriceFairness)][SUM] += ratings[uint(Catalog.Categories.PriceFairness)];
-        ratingMap[uint(Catalog.Categories.Rewatchable)][SUM] += ratings[uint(Catalog.Categories.Rewatchable)];
-        ratingMap[uint(Catalog.Categories.FamilyFriendly)][SUM] += ratings[uint(Catalog.Categories.FamilyFriendly)];
+        ratingMap[uint(Catalog.Categories.Quality)] += ratings[uint(Catalog.Categories.Quality)];
+        ratingMap[uint(Catalog.Categories.PriceFairness)] += ratings[uint(Catalog.Categories.PriceFairness)];
+        ratingMap[uint(Catalog.Categories.Rewatchable)] += ratings[uint(Catalog.Categories.Rewatchable)];
+        ratingMap[uint(Catalog.Categories.FamilyFriendly)] += ratings[uint(Catalog.Categories.FamilyFriendly)];
 
-        ratingMap[uint(Catalog.Categories.Quality)][TIMES] ++;
-        ratingMap[uint(Catalog.Categories.PriceFairness)][TIMES] ++;
-        ratingMap[uint(Catalog.Categories.Rewatchable)][TIMES] ++;
-        ratingMap[uint(Catalog.Categories.FamilyFriendly)][TIMES] ++;
+        times++;
         
         catalog.notifyRating(title, uint8(Catalog.Categories.Quality));
         catalog.notifyRating(title, uint8(Catalog.Categories.PriceFairness));
@@ -115,9 +111,9 @@ contract BaseContentManagement {
     
     function getRate(uint _category) external view validCategory(_category) returns(uint)  {
         
-        if(ratingMap[_category][TIMES] == 0)
+        if(times == 0)
             return 0;
         else 
-            return uint(ratingMap[_category][SUM] / ratingMap[_category][TIMES]);
+            return uint(ratingMap[_category] / times);
     }
 }

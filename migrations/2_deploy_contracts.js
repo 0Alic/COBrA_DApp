@@ -25,7 +25,10 @@ const watcher1 = web3.eth.accounts[6];
 const watcher2 = web3.eth.accounts[7];
 
 
-const contentCost = 1000000000000000;
+const contentCost1 = 100000000000000;
+const contentCost2 = 2000000000000000;
+const contentCost3 = 4000000000000000;
+const contentCost4 = 4000000000000000;
 
 const contentTitle1 = web3.fromAscii("I cani in spiaggia");
 const contentTitle2 = web3.fromAscii("I llama in montagna");
@@ -48,16 +51,16 @@ module.exports = function(deployer) {
         const catalog = await deployer.deploy(Catalog, {from: catalogCEO});
 
         // Deploy a few stuff
-        const content1 = await deployer.deploy(PhotoContent, authorName1, contentTitle1, catalog.address, {from: author1});
+        const content1 = await deployer.deploy(PhotoContent, authorName1, contentTitle1, contentCost1, catalog.address, {from: author1});
     //    const ph2 = await deployer.deploy(PhotoContent, web3.fromAscii("cane"), web3.fromAscii("I cani al mare"), catalog.address);
     //    const ph3 = await deployer.deploy(PhotoContent, web3.fromAscii("gatto"), web3.fromAscii("I gatti si lavano"), catalog.address);
 
-        const content2 = await deployer.deploy(SongContent, authorName2, contentTitle2, catalog.address, {from: author2});
-        const content22 = await deployer.deploy(SongContent, authorName2, contentTitle22, catalog.address, {from: author2});
-        const content3 = await deployer.deploy(SongContent, authorName3, contentTitle3, catalog.address, {from: author3});
-        const content33 = await deployer.deploy(SongContent, authorName3, contentTitle33, catalog.address, {from: author3});
-        const content41 = await deployer.deploy(VideoContent, authorName4, contentTitle41, catalog.address, {from: author4});
-        const content42 = await deployer.deploy(SongContent, authorName4, contentTitle42, catalog.address, {from: author4});
+        const content2 = await deployer.deploy(SongContent, authorName2, contentTitle2, contentCost2, catalog.address, {from: author2});
+        const content22 = await deployer.deploy(SongContent, authorName2, contentTitle22, contentCost2, catalog.address, {from: author2});
+        const content3 = await deployer.deploy(SongContent, authorName3, contentTitle3, contentCost3, catalog.address, {from: author3});
+        const content33 = await deployer.deploy(SongContent, authorName3, contentTitle33, contentCost3, catalog.address, {from: author3});
+        const content41 = await deployer.deploy(VideoContent, authorName4, contentTitle41, contentCost4, catalog.address, {from: author4});
+        const content42 = await deployer.deploy(SongContent, authorName4, contentTitle42, contentCost4, catalog.address, {from: author4});
 
     //    const vi1 = await deployer.deploy(VideoContent, web3.fromAscii("pranK02"), web3.fromAscii("Epico scherzo"), catalog.address);
     //    const vi2 = await deployer.deploy(VideoContent, web3.fromAscii("pranK03"), web3.fromAscii("NO CLICKBAIT"), catalog.address);
@@ -78,42 +81,42 @@ module.exports = function(deployer) {
     //    await catalog.addContent(ph3.address);
 
         // Add some visual
-        await catalog.getContent(contentTitle2, {from: watcher1, value: contentCost});
+        await catalog.getContent(contentTitle2, {from: watcher1, value: contentCost2});
         await content2.consumeContent({from: watcher1});
-//        await catalog.rateContent(contentTitle2, [5,6,7,8], {from: watcher1});
-        await catalog.getContent(contentTitle2, {from: watcher1, value: contentCost});
+        await catalog.rateContent(contentTitle2, [5,6,7,8], {from: watcher1});
+        await catalog.getContent(contentTitle2, {from: watcher1, value: contentCost2});
         await content2.consumeContent({from: watcher1});
-//        await catalog.rateContent(contentTitle2, [7,7,7,8], {from: watcher1});
+        await catalog.rateContent(contentTitle2, [7,7,7,8], {from: watcher1});
 
-        await catalog.getContent(contentTitle3, {from: watcher2, value: contentCost});
+        await catalog.getContent(contentTitle3, {from: watcher2, value: contentCost3});
         await content3.consumeContent({from: watcher2});
-//        await catalog.rateContent(contentTitle3, [8,8,7,4], {from: watcher2});
-        await catalog.getContent(contentTitle1, {from: watcher1, value: contentCost});
+        await catalog.rateContent(contentTitle3, [8,8,7,4], {from: watcher2});
+        await catalog.getContent(contentTitle1, {from: watcher1, value: contentCost1});
         await content1.consumeContent({from: watcher1});
-//        await catalog.rateContent(contentTitle1, [4,4,3,10], {from: watcher1});
+        await catalog.rateContent(contentTitle1, [4,4,3,10], {from: watcher1});
 
-        await catalog.getContent(contentTitle41, {from: watcher1, value: contentCost});
-        await catalog.getContent(contentTitle41, {from: watcher2, value: contentCost});
+        await catalog.getContent(contentTitle41, {from: watcher1, value: contentCost4});
+        await catalog.getContent(contentTitle41, {from: watcher2, value: contentCost4});
         await content41.consumeContent({from: watcher1});
-//        await catalog.rateContent(contentTitle41, [8,6,8,4], {from: watcher1});
+        await catalog.rateContent(contentTitle41, [8,6,8,4], {from: watcher1});
         await content41.consumeContent({from: watcher2});
-//        await catalog.rateContent(contentTitle41, [8,6,9,4], {from: watcher2});
-        await catalog.getContent(contentTitle41, {from: watcher1, value: contentCost});
-        await catalog.getContent(contentTitle41, {from: watcher2, value: contentCost});
+        await catalog.rateContent(contentTitle41, [8,6,9,4], {from: watcher2});
+        await catalog.getContent(contentTitle41, {from: watcher1, value: contentCost4});
+        await catalog.getContent(contentTitle41, {from: watcher2, value: contentCost4});
         await content41.consumeContent({from: watcher1});
-//        await catalog.rateContent(contentTitle41, [9,4,8,6], {from: watcher1});
+        await catalog.rateContent(contentTitle41, [9,4,8,6], {from: watcher1});
         await content41.consumeContent({from: watcher2});
-//        await catalog.rateContent(contentTitle41, [8,8,10,4], {from: watcher2});
-        await catalog.getContent(contentTitle41, {from: watcher1, value: contentCost});
-        await catalog.getContent(contentTitle41, {from: watcher2, value: contentCost});
-        await content41.consumeContent({from: watcher1});
-        await content41.consumeContent({from: watcher2});
+        await catalog.rateContent(contentTitle41, [8,8,10,4], {from: watcher2});
+//        await catalog.getContent(contentTitle41, {from: watcher1, value: contentCost4});
+//        await catalog.getContent(contentTitle41, {from: watcher2, value: contentCost4});
+//        await content41.consumeContent({from: watcher1});
+//        await content41.consumeContent({from: watcher2});
 
-        await catalog.getContent(contentTitle42, {from: watcher1, value: contentCost});
-        await catalog.getContent(contentTitle42, {from: watcher2, value: contentCost});
+        await catalog.getContent(contentTitle42, {from: watcher1, value: contentCost4});
+        await catalog.getContent(contentTitle42, {from: watcher2, value: contentCost4});
         await content42.consumeContent({from: watcher1});
-//        await catalog.rateContent(contentTitle42, [5,4,6,4], {from: watcher2});
+        await catalog.rateContent(contentTitle42, [5,4,6,4], {from: watcher2});
         await content42.consumeContent({from: watcher2});
-//        await catalog.rateContent(contentTitle42, [10,7,10,6], {from: watcher2});
+        await catalog.rateContent(contentTitle42, [10,7,10,6], {from: watcher2});
     }); 
 };

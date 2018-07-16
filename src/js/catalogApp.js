@@ -8,10 +8,7 @@ App = {
     contracts: {},
     account: '0x0',
     isPremium: false,
-    premiumCost: 40000000000000000,
-    contentCost: 1000000000000000,
-    oneEther: 1000000000000000000,
-    categories: {Quality: 0, PriceFairness: 1, Rewatchable: 2, FamilyFriendly: 3},
+    categories: {Quality: 0, PriceFairness: 1, Rewatchable: 2, FamilyFriendly: 3}, // To remove
     categoriesInv: {0: "Quality",1: "PriceFairness",2: "Rewatchable",3: "FamilyFriendly"},
     initBlock: 0,
     listenPeriod: 15,    // app listens for events on the last 5 blocks
@@ -101,15 +98,14 @@ App = {
                 // Access
                 instance.UserAccess({}, {fromBlock: App.initBlock, toBlock: 'latest'}).watch(function(error, event) { // Event subscription
                     
-                    if(event.args._user)
-                        alert("Wow, you have now access to " + web3.toUtf8(event.args._content) + "!"  + "    " +  block);
+                    if(!error && event.args._user == App.account)
+                        alert("Wow, you have now access to " + web3.toUtf8(event.args._content) + "!");
                 });
 
                 // Consumption
                 instance.UserConsume({}, {fromBlock: App.initBlock, toBlock: 'latest'}).watch(function(error, event) { // Event subscription
 
                     if(!error) {
-
                         
                         const content = web3.toUtf8(event.args._content);
                         const address = event.args._user.toString();
@@ -117,9 +113,16 @@ App = {
                         console.log("Consumption " + address + " " + content);
 
                         if(address == App.account)
-                            if(confirm("Would you like to leave a feedback to " + content + "?" + "    " +  block))
+                            if(confirm("Would you like to leave a feedback to " + content + "?"))
                                 App.showRatingPopup(content);
                     }
+                });
+
+                // Premium subscription
+                instance.NewPremiumUser({}, {fromBlock: App.initBlock, toBlock: 'latest'}).watch(function(error, event) {
+
+                    if(!error && event.args._user == App.account)
+                        alert("Wow, you are now subscribed to premium service! You can now get our contents for free!");
                 });
 
                 // New Popular/Latest
@@ -159,6 +162,12 @@ App = {
 
                     if(!error)
                         console.log("Event for " + event.args._content + ": " + App.categoriesInv[event.args._category]);
+                });
+
+                // Author payed
+                instance.AuthorPayed({}, {fromBlock: block, toBlock: 'latest'}).watch(function(error, event) {
+
+                    console.log(web3.toUtf8(event.args._author) + " got payed " + web3.fromWei(event.args._reward, 'ether'));
                 });
             });
         })
@@ -249,11 +258,14 @@ App = {
 
         App.contracts.Catalog.deployed().then(async(instance) => {
 
-            contentBytes = web3.fromUtf8(content);
-            alert("REMINDER: You are buying the content " + content + " at the cost of " +
-                App.contentCost / App.oneEther + " ether. Confirm or reject the transation on metamask.");
+            const contentBytes = web3.fromUtf8(content);
+            const manager = await App.contracts.BaseContent.at(await instance.contentMap(contentBytes));
+            const price = await manager.price();
 
-            transaction = await instance.getContent(contentBytes ,{from: App.account, value: App.contentCost});
+            alert("REMINDER: You are buying the content " + content + " at the cost of " +
+                web3.fromWei(price, 'ether') + " ether. Confirm or reject the transation on metamask.");
+
+            transaction = await instance.getContent(contentBytes ,{from: App.account, value: price});
             console.log("Content got");
             
         }).catch(function(error) {
@@ -327,12 +339,14 @@ App = {
 
         App.contracts.Catalog.deployed().then(async (instance) => {
 
+            const premiumCost = await instance.premiumCost();
+
             alert("REMINDER: You are buying a premium subscription at the cost of " +
-                App.premiumCost / App.oneEther + " ether. Confirm or reject the transation on metamask.");
+                web3.fromWei(premiumCost, "ether") + " ether. Confirm or reject the transation on metamask.");
 
-            transaction = await instance.buyPremium({from: App.account, value: App.premiumCost});
+            transaction = await instance.buyPremium({from: App.account, value: premiumCost});
+            $("#accountAddress").html("Your Account: " + App.account + ": <b>PREMIUM</b>");
             console.log("Premium got");
-
         }).catch(function(error) {
             const errorS = "Error while processing, possible reasons:\n"+
                             " - Not enough balance;\n"+
@@ -372,10 +386,13 @@ App = {
             }
             else {
 
-                content = web3.fromUtf8(selector.val());
+                const content = web3.fromUtf8(selector.val());
+                const manager = await App.contracts.BaseContent.at(await instance.contentMap(contentBytes));
+                const price = await manager.price();
+
                 alert("REMINDER: You are gifting a the content" + selector.val() + " to " + input.val() + " at the cost of " +
-                    App.contentCost / App.oneEther + " ether. Confirm or reject the transation on metamask.");
-                transaction = await instance.giftContent(content, input.val(), {from: App.account, value: App.contentCost});
+                    web3.fromWei(price, "ether") + " ether. Confirm or reject the transation on metamask.");
+                transaction = await instance.giftContent(content, input.val(), {from: App.account, value: price});
                 console.log("Content gifted");
                 $('#contentGiftDiv').hide();
 
@@ -417,10 +434,12 @@ App = {
             }
             else {
 
-                alert("REMINDER: You are gifting a premium subscription to " + input.val() + " at the cost of " +
-                     App.premiumCost / App.oneEther + " ether. Confirm or reject the transation on metamask.");
+                const premiumCost = await instance.premiumCost();
 
-                transaction = await instance.giftPremium(input.val(), {from: App.account, value: App.premiumCost});
+                alert("REMINDER: You are gifting a premium subscription to " + input.val() + " at the cost of " +
+                     web3.fromWei(premiumCost, 'ether') + " ether. Confirm or reject the transation on metamask.");
+
+                transaction = await instance.giftPremium(input.val(), {from: App.account, value: premiumCost});
                 console.log("Premium gifted");
 
                 $("#giftPremiumInput").hide();
@@ -545,6 +564,7 @@ App = {
 
     /**
      * Show the popup with all the information about a content, and the possibility to buy it
+     * @param content The selected content
      */
     showPurchasePopup: function(content){
 
@@ -558,8 +578,9 @@ App = {
         popupBody.html("Loading data...");
 
         
-        // Add click listeners, and unbind them right after the click (otherwise the listeners add up)        
+        // Add click listeners
         if(App.isPremium) {
+            // Change buy function whether the user is premium or not
 
             buyBtn.click({param: content}, function(event) {
                 App.buyContentPremium(event.data.param);
@@ -592,9 +613,11 @@ App = {
             const contentAddress = await instance.contentMap(web3.fromUtf8(content));
             const contentManager = await App.contracts.BaseContent.at(contentAddress);
 
+            // Content Info
             const title = web3.toUtf8(await contentManager.title());
             const author = web3.toUtf8(await contentManager.author());
             const genre = web3.toUtf8(await contentManager.getGenre());
+            const price = web3.fromWei(await contentManager.price(), 'ether');
             const views = await contentManager.views();
             const access = await contentManager.accessRightMap(App.account);
             const quality = await contentManager.getRate(App.categories.Quality); 
@@ -606,18 +629,21 @@ App = {
                         "<b>Title:</b> " + title +
                         "</br><b>Author:</b> " + author + 
                         "</br><b>Genre:</b> " + genre + 
+                        "</br><b>Price:</b> " + price + " ether"+
                         "</br><b>Views:</b> " + views +
-                        "</br>";
+                        "</br></br>";
 
+            // Rating portion
             str += loadRating();
-
+            // Fill up popup body
             popupBody.html(str);
-
+            // Display rating stars
             $('#rateDiv > #qualityRate').html(createRateOfContent(quality));
             $('#rateDiv > #priceRate').html(createRateOfContent(priceFair));
             $('#rateDiv > #rewatchRate').html(createRateOfContent(rewatch));
             $('#rateDiv > #familyRate').html(createRateOfContent(family));
 
+            // Display buy or consum button, depending on the user's access rights to that content
             if(access) {
                 buyBtn.hide();
                 consumeBtn.show();
@@ -633,37 +659,9 @@ App = {
     ////         Show Content Popup         ////
     ////////////////////////////////////////////
 
-    // Color the rating stars
-    add: function(ths, sno, category){
-
-        for (var i=1;i<=10;i++) {
-            var cur = $('#star'+category+''+i);
-            cur.removeClass("checked");
-        }
-
-        for (var i=1;i<=sno;i++) {
-            var cur = $('#star'+category+''+i);
-            if(cur.hasClass("fa fa-star")) {
-                cur.addClass("fa fa-star checked");
-            }
-        }
-    },
-
-    get: function(category) {
-
-        var count = 0;
-
-        for(var i=1; i<=10; i++) {
-
-            var cur = $('#star'+category+''+i);
-            if(cur.hasClass("checked"))  count++;
-        }
-
-        return count;
-    },
-
     /**
      * Show the popup with all the information about a content, and the possibility to buy it
+     * @param content the content to rate
      */
     showRatingPopup: function(content) {
 
@@ -688,13 +686,17 @@ App = {
         });
     },
 
+    /**
+     * Rate a content
+     * @param content the content to rate
+     */
     rateContent: function(content) {
 
-        const quality = App.get('quality');
-        const price = App.get('price');
-        const rewatch = App.get('rewatch');
-        const family = App.get('family');
-        
+        // Get the stars checked by the user
+        const quality = getCheckedStars('quality');
+        const price = getCheckedStars('price');
+        const rewatch = getCheckedStars('rewatch');
+        const family = getCheckedStars('family');
         
         App.contracts.Catalog.deployed().then(async(instance) => {
            
@@ -720,6 +722,21 @@ $(function() {
 });
 
 
+
+
+
+
+    ////////////////////////////////////////////
+    ////               Helpers              ////
+    ////////////////////////////////////////////
+
+
+/**
+ * Add a user notification to the notification sidebar, shrinking the address to reduce length
+ * @param {*} address the address
+ * @param {*} middleText some text to show
+ * @param {*} content the content
+ */
 function addUserNotification(address, middleText, content) {
 
     // Whenever the event is triggered
@@ -731,6 +748,12 @@ function addUserNotification(address, middleText, content) {
     appendNotification(stubAddr, middleText, content);
 }
 
+/**
+ * Add a content notification to the notification sidebar
+ * @param {*} from the author
+ * @param {*} middleText some text to show
+ * @param {*} content the content
+ */
 function appendNotification(from, middleText, content) {
 
     const s = from + " " + middleText + " " + content;
@@ -738,6 +761,9 @@ function appendNotification(from, middleText, content) {
     $('#notificationList').append(contentTemplate);
 }
 
+/**
+ * Generate HTML code to display rating stars
+ */
 function loadRating() {
 
     const s = '<label class="pull-left">Quality:</label>' +
@@ -755,20 +781,30 @@ function loadRating() {
     return s;
 }
 
+/**
+ * Create a line of non interactive stars to diplay a rating 
+ * @param {*} rate the rate to display
+ */
 function createRateOfContent(rate) {
 
     let s = "";
     let i=1;
     
+    // Generate 'rate' number of checked stars
     for(; i<=rate; i++) 
         s += createStar(i, false, 'checked');
 
+    // Generate 10-'rate' number of unchecked stars
     for(; i<=10; i++) 
         s += createStar(i, false, '');
 
     return s;
 }
 
+/**
+ * Create a line of interactive stars to let the user to rate a content's category
+ * @param {*} category the category to rate
+ */
 function createRating(category) {
 
     let s = "";
@@ -780,12 +816,60 @@ function createRating(category) {
     return s;
 }
 
+/**
+ * Create HTML code for a star
+ * @param {*} pos position of the star
+ * @param {*} interactible if the star is interactive, i.e. it can be toggled
+ * @param {*} checked if the star is checked
+ * @param {*} category the star's category
+ */
 function createStar(pos, interactible, checked, category) {
 
     const id = 'star' + category + '' + pos; 
 
     if(interactible)
-        return '<span class="fa fa-star ' + checked + '" id="' + id + '" onclick="App.add(this,'+pos+', \''+category+'\')" style="cursor: pointer"></span>';
+        return '<span class="fa fa-star ' + checked + '" id="' + id + '" onclick="addStars(this,'+pos+', \''+category+'\')" style="cursor: pointer"></span>';
     else
         return '<span class="fa fa-star ' + checked + '"></span>';
+}
+
+/**
+ * Rate a content (check the stars)
+ * @param {*} ths This
+ * @param {*} sno The number of stars to check
+ * @param {*} category The category
+ */
+function addStars(ths, sno, category) {
+
+    // The category helps to get the stars by id
+
+    for (var i=1;i<=10;i++) {
+        var cur = $('#star'+category+''+i);
+        cur.removeClass("checked");
+    }
+
+    for (var i=1;i<=sno;i++) {
+        var cur = $('#star'+category+''+i);
+        if(cur.hasClass("fa fa-star")) {
+            cur.addClass("fa fa-star checked");
+        }
+    }
+}
+
+/**
+ * Get the rate of a content's category after user's input
+ * @param {*} category the category
+ */
+function getCheckedStars(category) {
+
+    // The category helps to get the stars by id
+    var count = 0;
+
+    for(var i=1; i<=10; i++) {
+
+        var cur = $('#star'+category+''+i);
+        if(cur.hasClass("checked"))  count++;
+    }
+
+    return count;
 }

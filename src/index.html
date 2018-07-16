@@ -83,7 +83,7 @@
             <hr/>
 
             <!-- Buy Premium Form -->
-            <form id="premiumForm" onsubmit="App.buyPremium();">
+            <form id="premiumForm" onsubmit="App.buyPremium(); return false;">
                 <label>Free stuff for a whole month, for only 0.04 ether</label>
                 <button type="button" class="btn btn-primary pull-right" onclick="App.giftPremiumForm()" id="showPremiumBtn">Gift premium</button>
                 <button type="button" class="btn btn-primary pull-right" onclick="App.giftPremium()" id="giftPremiumBtn" style="display: none">Gift premium to</button>

@@ -22,18 +22,18 @@ contract Catalog {
     event AuthorPayed(bytes32 _author, uint _reward);
     event COBrAShutDown();
     
+    // Utilities
     address public COBrA_CEO_Address;
 
     uint constant public authorReward = 0.005 ether; // 2.25 eur
     uint constant public authorRewardPeriod = 5; // author gets payed every 10 views
     
-//    uint constant public contentCost = 0.001 ether; // 0.45 eur
     uint constant public premiumCost = 0.04 ether; // 18 eur
-
     uint constant public premiumPeriod = 6170;  // more or less 24h
 
     uint public totalViews = 0;
 
+    // Popular mappings
     mapping(address => uint) premiumUsers;
     mapping(bytes32 => BaseContentManagement) public contentMap;
     // author => content
@@ -42,18 +42,26 @@ contract Catalog {
     mapping(bytes32 => bytes32) mostPopularAuthorMap;
     mapping(bytes32 => bytes32) mostPopularGenreMap;
     
+    // Content List
     bytes32[] contentList;
 
+    // Categories utilities
     enum Categories { Quality, PriceFairness, Rewatchable, FamilyFriendly } 
     uint constant public numCategories = 4;
     uint constant public minRate = 1;
     uint constant public maxRate = 10;
 
-
+    // Rate mappings
+    bytes32 public bestRatedContent;
+    mapping(bytes32 => bytes32) public bestRatedByAuthor;
+    mapping(bytes32 => bytes32) public bestRatedByGenre;
     mapping(uint8 => bytes32) public mostRatedContent;
     // author => (category => content)
     mapping(bytes32 => mapping(uint8 => bytes32)) public mostRatedByAuthor;
     mapping(bytes32 => mapping(uint8 => bytes32)) public mostRatedByGenre;
+
+    // User filters
+    mapping(address => bytes32[])
     
         
     ///////////////////////////////////////////////////////////////////
@@ -377,6 +385,57 @@ contract Catalog {
             }
         }
     }
+
+    
+    function updateBestContent(bytes32 _content, uint[] ratings) external validRating(ratings) {
+
+        uint sum = ratings[uint(Categories.Quality)] + ratings[uint(Categories.PriceFairness)] +
+                    ratings[uint(Categories.Rewatchable)] + ratings[uint(Categories.FamilyFriendly)];
+        
+        uint sumBest = contentMap[bestRatedContent].ratingMap(uint(Categories.Quality)) +
+                        contentMap[bestRatedContent].ratingMap(uint(Categories.PriceFairness)) +
+                        contentMap[bestRatedContent].ratingMap(uint(Categories.Rewatchable)) +
+                        contentMap[bestRatedContent].ratingMap(uint(Categories.FamilyFriendly));
+
+        if(sum > sumBest)
+            bestRatedContent = _content;
+
+        // Update best rated by author
+        bytes32 _author = contentMap[_content].author();
+
+        if(bestRatedByAuthor[_author] == 0x0)
+            bestRatedByAuthor[_author] = _content;
+        else {
+
+            bytes32 _bestByAuthor = bestRatedByAuthor[_author];
+
+            uint sumBestAuhtor = contentMap[_bestByAuthor].ratingMap(uint(Categories.Quality)) +
+                                    contentMap[_bestByAuthor].ratingMap(uint(Categories.PriceFairness)) +
+                                    contentMap[_bestByAuthor].ratingMap(uint(Categories.Rewatchable)) +
+                                    contentMap[_bestByAuthor].ratingMap(uint(Categories.FamilyFriendly));
+
+            if(sum > sumBestAuhtor)
+                bestRatedByAuthor[_author] = _content;
+        }
+
+        // Update best rated by genre
+        bytes32 _genre = contentMap[_content].getGenre();
+
+        if(bestRatedByGenre[_genre] == 0x0)
+            bestRatedByGenre[_genre] = _content;
+        else {
+
+            bytes32 _bestByGenre = bestRatedByGenre[_genre];
+
+            uint sumBestGenre = contentMap[_bestByGenre].ratingMap(uint(Categories.Quality)) +
+                                    contentMap[_bestByGenre].ratingMap(uint(Categories.PriceFairness)) +
+                                    contentMap[_bestByGenre].ratingMap(uint(Categories.Rewatchable)) +
+                                    contentMap[_bestByGenre].ratingMap(uint(Categories.FamilyFriendly));
+
+            if(sum > sumBestGenre)
+                bestRatedByGenre[_genre] = _content;
+        }
+    }
     
     
     
@@ -484,7 +543,12 @@ contract Catalog {
                                                             returns(bytes32) {
         
         return mostRatedContent[_category];
-    }    
+    }
+
+    function getMostRated() external view returns(bytes32) {
+
+        return bestRatedContent;
+    }
 
 
     function getMostRatedByAuthor(bytes32 _author, uint8 _category) external view 
@@ -495,11 +559,23 @@ contract Catalog {
     }    
 
 
+    function getMostRatedByAuthor(bytes32 _author) external view returns(bytes32) {
+        
+        return bestRatedByAuthor[_author];
+    }    
+
+
     function getMostRatedByGenre(bytes32 _genre, uint8 _category) external view 
                                                                 validCategory(_category)    
                                                                 returns(bytes32) {
         
         return mostRatedByGenre[_genre][_category];
+    }    
+
+
+    function getMostRatedByGenre(bytes32 _genre) external view returns(bytes32) {
+        
+        return bestRatedByGenre[_genre];
     }    
 
         ///////////////////////////////////

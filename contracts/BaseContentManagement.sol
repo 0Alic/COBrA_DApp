@@ -109,6 +109,7 @@ contract BaseContentManagement {
         catalog.notifyRating(title, uint8(Catalog.Categories.PriceFairness));
         catalog.notifyRating(title, uint8(Catalog.Categories.Rewatchable));
         catalog.notifyRating(title, uint8(Catalog.Categories.FamilyFriendly));
+        catalog.updateBestContent(title, ratings);
     }
     
     

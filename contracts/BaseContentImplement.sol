@@ -1,14 +1,16 @@
 pragma solidity ^0.4.18;
 
 import "./BaseContentManagement.sol";
-import "./Catalog.sol";
+//import "./Catalog.sol";
 
 contract PhotoContentManagement is BaseContentManagement {
 
     constructor(bytes32 _author,
-                bytes32 _title, 
+                bytes32 _title,
+                uint _price,
                 Catalog _catalogAddress) BaseContentManagement(_author,
                                             _title, 
+                                            _price,
                                             _catalogAddress) public {
         
     }
@@ -26,8 +28,10 @@ contract SongContentManagement is BaseContentManagement {
 
     constructor(bytes32 _author,
                 bytes32 _title, 
+                uint _price,
                 Catalog _catalogAddress) BaseContentManagement(_author,
                                             _title, 
+                                            _price,
                                             _catalogAddress) public {
         
     }
@@ -45,8 +49,10 @@ contract VideoContentManagement is BaseContentManagement {
 
     constructor(bytes32 _author,
                 bytes32 _title, 
+                uint _price,
                 Catalog _catalogAddress) BaseContentManagement(_author,
                                             _title, 
+                                            _price,
                                             _catalogAddress) public {
         
     }

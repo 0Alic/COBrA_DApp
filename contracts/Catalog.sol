@@ -19,15 +19,15 @@ contract Catalog {
     event NewBestRated(bytes32 _content, uint8 _category);
     event NewBestRatedByAuthor(bytes32 _author, bytes32 _content, uint8 _category);
     event NewBestRatedByGenre(bytes32 _genre, bytes32 _content, uint8 _category);
-    event AuthorPayed(bytes32 _author);
+    event AuthorPayed(bytes32 _author, uint _reward);
     event COBrAShutDown();
     
     address public COBrA_CEO_Address;
 
     uint constant public authorReward = 0.005 ether; // 2.25 eur
-    uint constant public authorRewardPeriod = 10; // author gets payed every 10 views
+    uint constant public authorRewardPeriod = 5; // author gets payed every 10 views
     
-    uint constant public contentCost = 0.001 ether; // 0.45 eur
+//    uint constant public contentCost = 0.001 ether; // 0.45 eur
     uint constant public premiumCost = 0.04 ether; // 18 eur
 
     uint constant public premiumPeriod = 6170;  // more or less 24h
@@ -97,7 +97,8 @@ contract Catalog {
         _;
     }
     
-    // TODO doc
+    ///@notice Check if a given category is valid
+    ///@param _category the category
     modifier validCategory(uint _category) {
         require(_category == uint(Categories.Quality) ||
                 _category == uint(Categories.PriceFairness) ||
@@ -107,6 +108,8 @@ contract Catalog {
         _;
     }
     
+    ///@notice Check if an array of ratings is valid
+    ///@param _ratings the rating array
     modifier validRating(uint[] _ratings) {
     
         require(_ratings.length == numCategories, "Rating array not valid");
@@ -115,6 +118,14 @@ contract Catalog {
             require(_ratings[i] >= minRate, "Invalid lower bound rating");
             require(_ratings[i] <= maxRate, "Invalid upper bound rating");
         }
+        _;
+    }
+
+    ///@notice Check if the sender is the manager of a given content
+    ///@param _content the content
+    modifier correctManager(bytes32 _content) {
+
+        require(msg.sender == address(contentMap[_content]), "Caller isn't the content's manager");
         _;
     }
 
@@ -162,7 +173,7 @@ contract Catalog {
     ///@param _content the id of the content
     function getContent(bytes32 _content) external payable 
                                 isDeployed(_content)
-                                priceCorrect(msg.value, contentCost) {
+                                priceCorrect(msg.value, contentMap[_content].price()) {
         
         contentMap[_content].grantAccess(msg.sender);
         emit UserAccess(msg.sender, _content);
@@ -196,7 +207,7 @@ contract Catalog {
     ///@param _content the id of the content
     ///@param _dest the address of the receiver
     function giftContent(bytes32 _content, address _dest) external payable 
-                                priceCorrect(msg.value, contentCost) {
+                                priceCorrect(msg.value, contentMap[_content].price()) {
         
         contentMap[_content].grantAccess(_dest);
         emit UserAccess(_dest, _content);
@@ -219,9 +230,7 @@ contract Catalog {
     /// @param _user the sender
     /// @param _premiumView if the content was consumed by a premium user
     /// @dev this function should be called only by a ContentManagement contract
-    function notifyConsumption(bytes32 _content, address _user, bool _premiumView) external {
-        
-        require(msg.sender == address(contentMap[_content]), "Caller isn't the content's manager");
+    function notifyConsumption(bytes32 _content, address _user, bool _premiumView) external  correctManager(_content){
         
         emit UserConsume(_user, _content);
 
@@ -273,9 +282,25 @@ contract Catalog {
         // Check for payment
         if(contentMap[_content].views() % authorRewardPeriod == 0){
             
-            contentMap[_content].authorAddress().transfer(authorReward);
-            emit AuthorPayed(contentMap[_content].author()); 
+            uint reward = computeReward(_content);
+            contentMap[_content].authorAddress().transfer(reward);
+//            contentMap[_content].authorAddress().transfer(authorReward);
+
+            emit AuthorPayed(contentMap[_content].author(), reward); 
         }
+    }
+
+    // Helper
+            // Pay the author == basePrice * (avgRate / maxRate)        
+    function computeReward(bytes32 _content) private view returns(uint) {
+
+        uint qRate = contentMap[_content].getRate(uint(Categories.Quality));
+        uint pfRate = contentMap[_content].getRate(uint(Categories.PriceFairness));
+        uint rRate = contentMap[_content].getRate(uint(Categories.Rewatchable));
+        uint ffRate = contentMap[_content].getRate(uint(Categories.FamilyFriendly));
+        uint rate = qRate + pfRate + rRate + ffRate;
+        uint max = numCategories * maxRate;
+        return (contentMap[_content].price() * rate) / max;
     }
     
     function rateContent(bytes32 _content, uint[] ratings) external validRating(ratings) {
@@ -285,11 +310,8 @@ contract Catalog {
     
     
     // TODO CONTROLLA BENE
-    function notifyRating(bytes32 _content, uint8 _category) external {
+    function notifyRating(bytes32 _content, uint8 _category) external correctManager(_content) {
         
-        // TODO use modifier for this
-        require(msg.sender == address(contentMap[_content]), "Caller isn't the content's manager");
-
         emit ContentRated(_content, _category);
         uint _popularRate = 0;
 
@@ -531,6 +553,6 @@ contract Catalog {
         uint _amount = (_multiplier * _balance) / _factor;
         address _author = contentMap[_content].authorAddress();
         _author.transfer(_amount);
-        emit AuthorPayed(contentMap[_content].author());
+        emit AuthorPayed(contentMap[_content].author(), _amount);
     }
 }

@@ -10,6 +10,7 @@ contract BaseContentManagement {
     bytes32 public author;
     bytes32 public title;
     uint public views = 0;
+    uint public price = 0;
     
     mapping(address => bool) public accessRightMap;
     
@@ -56,13 +57,15 @@ contract BaseContentManagement {
 
 
     constructor(bytes32 _author,
-                bytes32 _title, 
+                bytes32 _title,
+                uint _price,
                 Catalog _catalogAddress) public {
         
         authorAddress = msg.sender;
         catalog = _catalogAddress;
         author = _author;
         title = _title;
+        price = _price;
         
         ratingMap = new uint[](catalog.numCategories());
         times = 0;

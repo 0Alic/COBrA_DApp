@@ -12,6 +12,7 @@ App = {
     categories: {0: "Quality",1: "PriceFairness",2: "Rewatchable",3: "FamilyFriendly"},
     initBlock: 0,
     listenPeriod: 25,    // app listens for events on the last 5 blocks
+    preferences: [],
 
 
     ////////////////////////////////////////////
@@ -83,8 +84,12 @@ App = {
     listenForEvents: function() {
         App.contracts.Catalog.deployed().then(async(instance) => {
 
+            // Load preferences
+            App.preferences = await instance.userPreferences[App.account];
+            
             catalogInstance = instance;
-            web3.eth.getBlockNumber(function(error, block){ 
+
+            web3.eth.getBlockNumber(function(error, block) { 
 
                 ////
                 // Add listeners
@@ -139,7 +144,7 @@ App = {
                 // TODO filter authors/genres
                 instance.NewPopularByAuthor({}, {fromBlock: from, toBlock: 'latest'}).watch(function(error, event) {
 
-                    if(!error) {
+                    if(!error && App.preferences.indexOf(event.args._author) != -1) { // Author is in my preferences
                         appendNotification(web3.toUtf8(event.args._author), "has a new popular content:", web3.toUtf8(event.args._content));
                     }
                 });
@@ -147,7 +152,7 @@ App = {
 
                 instance.NewPopularByGenre({}, {fromBlock: from, toBlock: 'latest'}).watch(async(error, event) => {
 
-                    if(!error){
+                    if(!error && App.preferences.indexOf(event.args._genre) != -1){
                         appendNotification(web3.toUtf8(event.args._genre), "has a new popular content:", web3.toUtf8(event.args._content));
                     }
                 });
@@ -155,14 +160,14 @@ App = {
 
                 instance.NewLatestByAuthor({}, {fromBlock: from, toBlock: 'latest'}).watch(function(error, event) {
 
-                    if(!error){
+                    if(!error && App.preferences.indexOf(event.args._author) != -1){
                         appendNotification(web3.toUtf8(event.args._author), "published a new content:", web3.toUtf8(event.args._content));
                     }
                 });
 
                 instance.NewLatestByGenre({}, {fromBlock: from, toBlock: 'latest'}).watch(function(error, event) {
 
-                    if(!error){
+                    if(!error && App.preferences.indexOf(event.args._genre) != -1){
                         appendNotification(web3.toUtf8(event.args._genre), "has a new content:", web3.toUtf8(event.args._content));
                     }
                 });
@@ -206,6 +211,7 @@ App = {
 
             catalogInstance = instance;
 
+            // Show premium label
             if(await catalogInstance.isPremium(App.account)) {
                 App.isPremium = true;
                 $("#accountAddress").html("Your Account: " + App.account + ": <b>PREMIUM</b>");
@@ -575,7 +581,30 @@ App = {
 
     filter: function() {
 
+        var input = $('#filterInput');
+        var selector = $('#filterSelect');
 
+        App.contracts.Catalog.deployed().then(async (instance) => {
+
+            var content;
+
+            /*
+            // Select filter
+            switch (selector.val()) {
+
+                case "authorFilter":
+                    break;
+                case "genreFilter":                
+                    break;
+            }
+           
+            */
+
+            if(selector.val() != "")
+                await instance.addPreference(web3.fromUtf8(selector.val()));
+            else
+                alert("Empty field");
+        });             
     },
 
     ////////////////////////////////////////////

@@ -61,7 +61,7 @@ contract Catalog {
     mapping(bytes32 => mapping(uint8 => bytes32)) public mostRatedByGenre;
 
     // User filters
-    mapping(address => bytes32[])
+    mapping(address => bytes32[]) public userPreferences;
     
         
     ///////////////////////////////////////////////////////////////////
@@ -435,6 +435,11 @@ contract Catalog {
             if(sum > sumBestGenre)
                 bestRatedByGenre[_genre] = _content;
         }
+    }
+
+    function addPreference(bytes32 _label) external {
+
+        userPreferences[msg.sender].push(_label);
     }
     
     

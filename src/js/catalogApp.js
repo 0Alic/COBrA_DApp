@@ -8,10 +8,10 @@ App = {
     contracts: {},
     account: '0x0',
     isPremium: false,
-//    categories: {Quality: 0, PriceFairness: 1, Rewatchable: 2, FamilyFriendly: 3}, // To remove
-    categories: {0: "Quality",1: "PriceFairness",2: "Rewatchable",3: "FamilyFriendly"},
+    categoryIds: {"quality": 0, "priceFairness": 1, "rewatchable": 2, "familyFriendly": 3, "average": 4},
+    categories: {0: "Quality",1: "PriceFairness",2: "Rewatchable",3: "FamilyFriendly", 4: "Average"},
     initBlock: 0,
-    listenPeriod: 25,    // app listens for events on the last 5 blocks
+    listenPeriod: 30,    // app listens for some events from the last 30 blocks
     preferences: [],
 
 
@@ -82,12 +82,13 @@ App = {
 
     /* Create the event listeners */
     listenForEvents: function() {
+
         App.contracts.Catalog.deployed().then(async(instance) => {
 
             // Load preferences
-            App.preferences = await instance.userPreferences[App.account];
-            
-            catalogInstance = instance;
+            const prefs = await instance.getPreferenceCount();
+            for(var i=0; i<prefs; i++)
+                App.preferences.push(await instance.userPreferences(App.account, i));
 
             web3.eth.getBlockNumber(function(error, block) { 
 
@@ -95,7 +96,7 @@ App = {
                 // Add listeners
                 ////
 
-                const from = block - App.listenPeriod;
+                let from = block - App.listenPeriod;
                 App.initBlock = block;
                 
                 if(from < 0) from = 0;
@@ -145,7 +146,7 @@ App = {
                 instance.NewPopularByAuthor({}, {fromBlock: from, toBlock: 'latest'}).watch(function(error, event) {
 
                     if(!error && App.preferences.indexOf(event.args._author) != -1) { // Author is in my preferences
-                        appendNotification(web3.toUtf8(event.args._author), "has a new popular content:", web3.toUtf8(event.args._content));
+                        appendNotification(web3.toUtf8(event.args._author), "<b>has a new popular content:</b>", web3.toUtf8(event.args._content));
                     }
                 });
 
@@ -153,7 +154,7 @@ App = {
                 instance.NewPopularByGenre({}, {fromBlock: from, toBlock: 'latest'}).watch(async(error, event) => {
 
                     if(!error && App.preferences.indexOf(event.args._genre) != -1){
-                        appendNotification(web3.toUtf8(event.args._genre), "has a new popular content:", web3.toUtf8(event.args._content));
+                        appendNotification(web3.toUtf8(event.args._genre), "<b>has a new popular content:</b>", web3.toUtf8(event.args._content));
                     }
                 });
                 
@@ -161,28 +162,29 @@ App = {
                 instance.NewLatestByAuthor({}, {fromBlock: from, toBlock: 'latest'}).watch(function(error, event) {
 
                     if(!error && App.preferences.indexOf(event.args._author) != -1){
-                        appendNotification(web3.toUtf8(event.args._author), "published a new content:", web3.toUtf8(event.args._content));
+                        appendNotification(web3.toUtf8(event.args._author), "<b>published a new content:</b>", web3.toUtf8(event.args._content));
                     }
                 });
 
                 instance.NewLatestByGenre({}, {fromBlock: from, toBlock: 'latest'}).watch(function(error, event) {
 
                     if(!error && App.preferences.indexOf(event.args._genre) != -1){
-                        appendNotification(web3.toUtf8(event.args._genre), "has a new content:", web3.toUtf8(event.args._content));
+                        appendNotification(web3.toUtf8(event.args._genre), "<b>has a new content:</b>", web3.toUtf8(event.args._content));
                     }
                 });
 
-                // Categories events
-                instance.NewBestRated({}, {fromBlock: from, toBlock: 'latest'}).watch(function(error, event) {
-
-                    if(!error)
-                        console.log("Event for " + event.args._content + ": " + App.categories[event.args._category]);
-                });
-
                 // Author payed
-                instance.AuthorPayed({}, {fromBlock: block, toBlock: 'latest'}).watch(function(error, event) {
+                instance.AuthorPayed({}, {fromBlock: App.initBlock, toBlock: 'latest'}).watch(function(error, event) {
 
                     console.log(web3.toUtf8(event.args._author) + " got payed " + web3.fromWei(event.args._reward, 'ether'));
+                });
+
+
+
+
+                instance.tryy({}, {fromBlock: 0, toBlock: 'latest'}).watch(function(error, event) {
+
+                    console.log("------------ " + event.args.a);
                 });
             });
         })
@@ -539,28 +541,46 @@ App = {
     getInfo: function() {
 
         var input = $('#mostPopular');
-        var selector = $('#filterSelect');
-        var result = $('#filterResult');
+        var selector = $('#getInfoSelect');
+        var categorySelector = $('#getCategorySelect');
+        var result = $('#infoResult');
 
         App.contracts.Catalog.deployed().then(async (instance) => {
 
             var content;
+            var category = categorySelector.val();
+            var inputString;
+
             result.html("Loading...");
+
+            inputString = web3.fromUtf8(input.val());
 
             // Select filter
             switch (selector.val()) {
 
+                // Popular / Latest content
                 case "authorPop":
-                    content = web3.toUtf8(await instance.getMostPopularByAuthor(web3.fromUtf8(input.val())));
+                    content = web3.toUtf8(await instance.getMostPopularByAuthor(inputString));
                     break;
                 case "genrePop":                
-                    content = web3.toUtf8(await instance.getMostPopularByGenre(web3.fromUtf8(input.val())));
+                    content = web3.toUtf8(await instance.getMostPopularByGenre(inputString));
                     break;
                 case "authorLate":                
-                    content = web3.toUtf8(await instance.getLatestByAuthor(web3.fromUtf8(input.val())));
+                    content = web3.toUtf8(await instance.getLatestByAuthor(inputString));
                     break;
                 case "genreLate":                
-                    content = web3.toUtf8(await instance.getLatestByGenre(web3.fromUtf8(input.val())));
+                    content = web3.toUtf8(await instance.getLatestByGenre(inputString));
+                    break;
+
+                // Most rated content by category
+                case "bestOfCategory":
+                    content = web3.toUtf8(await instance.getMostRated(App.categoryIds[category]));
+                    break;
+                case "bestOfAuthorCategory":                
+                    content = web3.toUtf8(await instance.getMostRatedByAuthor(inputString, App.categoryIds[category]));
+                    break;
+                case "bestOfGenreCategory":                
+                    content = web3.toUtf8(await instance.getMostRatedByGenre(inputString, App.categoryIds[category]));
                     break;
             }
 
@@ -575,33 +595,18 @@ App = {
 
 
     ////////////////////////////////////////////
-    ////         Show Content Popup         ////
+    ////    Filter Content Notifications    ////
     ////////////////////////////////////////////
 
 
     filter: function() {
 
         var input = $('#filterInput');
-        var selector = $('#filterSelect');
 
         App.contracts.Catalog.deployed().then(async (instance) => {
 
-            var content;
-
-            /*
-            // Select filter
-            switch (selector.val()) {
-
-                case "authorFilter":
-                    break;
-                case "genreFilter":                
-                    break;
-            }
-           
-            */
-
-            if(selector.val() != "")
-                await instance.addPreference(web3.fromUtf8(selector.val()));
+            if(input.val() != "")
+                await instance.addPreference(web3.fromUtf8(input.val()));
             else
                 alert("Empty field");
         });             

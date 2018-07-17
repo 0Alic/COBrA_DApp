@@ -97,19 +97,15 @@ contract BaseContentManagement {
     
     
     function rateContent(uint[] ratings) external isCatalog {
-        
+
         ratingMap[uint(Catalog.Categories.Quality)] += ratings[uint(Catalog.Categories.Quality)];
         ratingMap[uint(Catalog.Categories.PriceFairness)] += ratings[uint(Catalog.Categories.PriceFairness)];
         ratingMap[uint(Catalog.Categories.Rewatchable)] += ratings[uint(Catalog.Categories.Rewatchable)];
         ratingMap[uint(Catalog.Categories.FamilyFriendly)] += ratings[uint(Catalog.Categories.FamilyFriendly)];
 
         times++;
-        
-        catalog.notifyRating(title, uint8(Catalog.Categories.Quality));
-        catalog.notifyRating(title, uint8(Catalog.Categories.PriceFairness));
-        catalog.notifyRating(title, uint8(Catalog.Categories.Rewatchable));
-        catalog.notifyRating(title, uint8(Catalog.Categories.FamilyFriendly));
-        catalog.updateBestContent(title, ratings);
+
+        catalog.notifyRating(title, ratings);
     }
     
     

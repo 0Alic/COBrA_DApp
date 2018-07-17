@@ -98,10 +98,6 @@
             <form onSubmit="App.filter(); return false;">
               <div class="form-group">
                 <label for="filterSelect">Choose your filters to personalise your notification system</label>
-                <select class="form-control" id="filterSelect">
-                    <option value="authorFilter">Filter by author</option>
-                    <option value="genreFilter">Filter by genre</option>
-                </select>
                 <input type="text" class="form-control" id="filterInput" placeholder="author or genre" />
               </div>
               <button type="submit" class="btn btn-primary">Add Filter</button>
@@ -118,12 +114,22 @@
                     <option value="genrePop">Most Popular of genre</option>
                     <option value="authorLate">Latest of author</option>
                     <option value="genreLate">Latest of genre</option>
-                    <!-- TODO add categories -->
+                    <option disabled>-</option>
+                    <option value="bestOfCategory">Best of category</option>
+                    <option value="bestOfAuthorCategory">Best of author of category</option>
+                    <option value="bestOfGenreCategory">Best of genre of category</option>
+                </select>
+                <select class="form-control" id="getCategorySelect">
+                  <option value="average">All categories</option>
+                  <option value="quality">Quality</option>
+                  <option value="priceFairness">Price Fairness</option>
+                  <option value="rewatchable">Rewatchable</option>
+                  <option value="familyFriendly">Family friendlyness</option>
                 </select>
                 <input type="text" class="form-control" id="mostPopular" placeholder="author or genre" />
               </div>
               <button type="submit" class="btn btn-primary">Watch</button>
-              <label id="filterResult"></label>
+              <label id="infoResult"></label>
               <hr />
             </form>
             

@@ -48,7 +48,7 @@ module.exports = function(deployer) {
 
     deployer.then(async () => {
 
-        const catalog = await deployer.deploy(Catalog, {from: catalogCEO, gas: 150000000}); // 7M
+        const catalog = await deployer.deploy(Catalog, {from: catalogCEO}); // 7M
 
         // Deploy a few stuff
         const content1 = await deployer.deploy(PhotoContent, authorName1, contentTitle1, contentCost1, catalog.address, {from: author1});

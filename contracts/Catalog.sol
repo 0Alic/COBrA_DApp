@@ -16,9 +16,6 @@ contract Catalog {
     event NewLatestByAuthor(bytes32 _author, bytes32 _content);
     event NewLatestByGenre(bytes32 _genre, bytes32 _content);
     event ContentRated(bytes32 _content, uint8 _category);
-    event NewBestRated(bytes32 _content, uint8 _category);
-    event NewBestRatedByAuthor(bytes32 _author, bytes32 _content, uint8 _category);
-    event NewBestRatedByGenre(bytes32 _genre, bytes32 _content, uint8 _category);
     event AuthorPayed(bytes32 _author, uint _reward);
     event COBrAShutDown();
     
@@ -61,7 +58,7 @@ contract Catalog {
     mapping(bytes32 => mapping(uint8 => bytes32)) public mostRatedByGenre;
 
     // User filters
-    mapping(address => bytes32[]) public userPreferences;
+//    mapping(address => bytes32[]) public userPreferences;
     
         
     ///////////////////////////////////////////////////////////////////
@@ -242,57 +239,19 @@ contract Catalog {
         
         emit UserConsume(_user, _content);
 
-        if(!_premiumView) totalViews++;
-
-        uint _popularViews = 0;
-        
+        if(!_premiumView) totalViews++;        
   
         // Update current most popular content of the author
-        bytes32 _author = contentMap[_content].author();                    // author name
-        bytes32 _currentPopularByAuthor = mostPopularAuthorMap[_author];    // pop content
-        
-        if(_currentPopularByAuthor == 0x0){
-            // First access to a content of that author
-            mostPopularAuthorMap[_author] = _content;
-            emit NewPopularByAuthor(_author, _content);
-        }
-        else {
-            _popularViews = contentMap[_currentPopularByAuthor].views();    // pop views
-    
-            if(contentMap[_content].views() > _popularViews) {
-                
-                mostPopularAuthorMap[_author] = _content;
-                emit NewPopularByAuthor(_author, _content);
-            }
-        }   
+        updateMostPopularByAuthor(_content);
 
-
-        // Update current most popular content of the author
-        bytes32 _genre = contentMap[_content].getGenre();               // genre name
-        bytes32 _currentPopularByGenre = mostPopularGenreMap[_genre];   // pop content
-        
-        if(_currentPopularByGenre == 0x0){
-            // First access to a content of that genre
-            mostPopularGenreMap[_genre] = _content;            
-            emit NewPopularByGenre(_genre, _content);
-        }
-        else {
-            _popularViews = contentMap[_currentPopularByGenre].views(); // pop views
-    
-            if(contentMap[_content].views() > _popularViews) {
-                
-                mostPopularGenreMap[_genre] = _content;
-                emit NewPopularByGenre(_genre, _content);
-            }
-        }
-        
+        // Update current most popular content of a genre
+        updateMostPopularByGenre(_content);
    
         // Check for payment
         if(contentMap[_content].views() % authorRewardPeriod == 0){
             
             uint reward = computeReward(_content);
             contentMap[_content].authorAddress().transfer(reward);
-//            contentMap[_content].authorAddress().transfer(authorReward);
 
             emit AuthorPayed(contentMap[_content].author(), reward); 
         }
@@ -325,12 +284,13 @@ contract Catalog {
 
         
         // Most rated in general
+        
         bytes32 _bestRated = mostRatedContent[_category];
         
         if(_bestRated == 0x0) {
             // First rating
             mostRatedContent[_category] = _content;
-            emit NewBestRated(_content, _category);
+//            emit NewBestRated(_content, _category);
         }
         else {
             
@@ -339,51 +299,16 @@ contract Catalog {
             if(contentMap[_content].getRate(_category) > _popularRate) {
                 
                 mostRatedContent[_category] = _content;
-                emit NewBestRated(_content, _category);
+//                emit NewBestRated(_content, _category);
             }
         }
         
     
         // Update most rated by author
-        bytes32 _author = contentMap[_content].author();
-        bytes32 _bestRatedByAuhtor = mostRatedByAuthor[_author][_category];
-
-        if(_bestRatedByAuhtor == 0x0) {
-            // First rating to a content of that author
-            mostRatedByAuthor[_author][_category] = _content;
-            emit NewBestRatedByAuthor(_author, _content, _category);
-        }
-        else {
-
-            _popularRate = contentMap[_bestRatedByAuhtor].getRate(_category);
-            
-            if(contentMap[_content].getRate(_category) > _popularRate) {
-                
-                mostRatedByAuthor[_author][_category] = _content;
-                emit NewBestRatedByAuthor(_author, _content, _category);
-            }
-        }
-
+        updateMostRatedByAuthor(_content, _category);
 
         // Update current most popular content of the author
-        bytes32 _genre = contentMap[_content].getGenre();
-        bytes32 _bestRatedByGenre = mostRatedByGenre[_author][_category];
-
-        if(_bestRatedByGenre == 0x0) {
-            // First rating to a content of that author
-            mostRatedByGenre[_genre][_category] = _content;
-            emit NewBestRatedByGenre(_genre, _content, _category);
-        }
-        else {
-
-            _popularRate = contentMap[_bestRatedByGenre].getRate(_category);
-            
-            if(contentMap[_content].getRate(_category) > _popularRate) {
-                
-                mostRatedByGenre[_genre][_category] = _content;
-                emit NewBestRatedByGenre(_genre, _content, _category);
-            }
-        }
+        updateMostRatedByGenre(_content, _category);
     }
 
     
@@ -391,56 +316,34 @@ contract Catalog {
 
         uint sum = ratings[uint(Categories.Quality)] + ratings[uint(Categories.PriceFairness)] +
                     ratings[uint(Categories.Rewatchable)] + ratings[uint(Categories.FamilyFriendly)];
-        
-        uint sumBest = contentMap[bestRatedContent].ratingMap(uint(Categories.Quality)) +
-                        contentMap[bestRatedContent].ratingMap(uint(Categories.PriceFairness)) +
-                        contentMap[bestRatedContent].ratingMap(uint(Categories.Rewatchable)) +
-                        contentMap[bestRatedContent].ratingMap(uint(Categories.FamilyFriendly));
 
-        if(sum > sumBest)
+        // Update best rated content
+        if(bestRatedContent == 0x0)
             bestRatedContent = _content;
+        else {
+
+            uint sumBest = contentMap[bestRatedContent].ratingMap(uint(Categories.Quality)) +
+                            contentMap[bestRatedContent].ratingMap(uint(Categories.PriceFairness)) +
+                            contentMap[bestRatedContent].ratingMap(uint(Categories.Rewatchable)) +
+                            contentMap[bestRatedContent].ratingMap(uint(Categories.FamilyFriendly));
+
+            if(sum > sumBest)
+                bestRatedContent = _content;
+        }
+
 
         // Update best rated by author
-        bytes32 _author = contentMap[_content].author();
-
-        if(bestRatedByAuthor[_author] == 0x0)
-            bestRatedByAuthor[_author] = _content;
-        else {
-
-            bytes32 _bestByAuthor = bestRatedByAuthor[_author];
-
-            uint sumBestAuhtor = contentMap[_bestByAuthor].ratingMap(uint(Categories.Quality)) +
-                                    contentMap[_bestByAuthor].ratingMap(uint(Categories.PriceFairness)) +
-                                    contentMap[_bestByAuthor].ratingMap(uint(Categories.Rewatchable)) +
-                                    contentMap[_bestByAuthor].ratingMap(uint(Categories.FamilyFriendly));
-
-            if(sum > sumBestAuhtor)
-                bestRatedByAuthor[_author] = _content;
-        }
+        updateBestRatedByAuthor(_content, sum);
 
         // Update best rated by genre
-        bytes32 _genre = contentMap[_content].getGenre();
-
-        if(bestRatedByGenre[_genre] == 0x0)
-            bestRatedByGenre[_genre] = _content;
-        else {
-
-            bytes32 _bestByGenre = bestRatedByGenre[_genre];
-
-            uint sumBestGenre = contentMap[_bestByGenre].ratingMap(uint(Categories.Quality)) +
-                                    contentMap[_bestByGenre].ratingMap(uint(Categories.PriceFairness)) +
-                                    contentMap[_bestByGenre].ratingMap(uint(Categories.Rewatchable)) +
-                                    contentMap[_bestByGenre].ratingMap(uint(Categories.FamilyFriendly));
-
-            if(sum > sumBestGenre)
-                bestRatedByGenre[_genre] = _content;
-        }
+        updateBestRatedByGenre(_content, sum);    
     }
+    
 
-    function addPreference(bytes32 _label) external {
+//    function addPreference(bytes32 _label) external {
 
-        userPreferences[msg.sender].push(_label);
-    }
+  //      userPreferences[msg.sender].push(_label);
+    //}
     
     
     
@@ -635,5 +538,139 @@ contract Catalog {
         address _author = contentMap[_content].authorAddress();
         _author.transfer(_amount);
         emit AuthorPayed(contentMap[_content].author(), _amount);
+    }
+
+
+
+        ///////////////////////////////////
+        ///            Helpers          ///
+        ///////////////////////////////////
+
+    function updateBestRatedByAuthor(bytes32 _content, uint _contentSum) private {
+
+
+        bytes32 _author = contentMap[_content].author();
+
+        if(bestRatedByAuthor[_author] == 0x0)
+            bestRatedByAuthor[_author] = _content;
+        else {
+
+            bytes32 _bestByAuthor = bestRatedByAuthor[_author];
+
+            uint sumBestAuhtor = contentMap[_bestByAuthor].ratingMap(uint(Categories.Quality)) +
+                                    contentMap[_bestByAuthor].ratingMap(uint(Categories.PriceFairness)) +
+                                    contentMap[_bestByAuthor].ratingMap(uint(Categories.Rewatchable)) +
+                                    contentMap[_bestByAuthor].ratingMap(uint(Categories.FamilyFriendly));
+
+            if(_contentSum > sumBestAuhtor)
+                bestRatedByAuthor[_author] = _content;
+        }
+    }
+
+    function updateBestRatedByGenre(bytes32 _content, uint _contentSum) private {
+
+        bytes32 _genre = contentMap[_content].getGenre();
+
+        if(bestRatedByGenre[_genre] == 0x0)
+            bestRatedByGenre[_genre] = _content;
+        else {
+
+            bytes32 _bestByGenre = bestRatedByGenre[_genre];
+
+            uint sumBestGenre = contentMap[_bestByGenre].ratingMap(uint(Categories.Quality)) +
+                                    contentMap[_bestByGenre].ratingMap(uint(Categories.PriceFairness)) +
+                                    contentMap[_bestByGenre].ratingMap(uint(Categories.Rewatchable)) +
+                                    contentMap[_bestByGenre].ratingMap(uint(Categories.FamilyFriendly));
+
+            if(_contentSum > sumBestGenre)
+                bestRatedByGenre[_genre] = _content;
+        }
+    }
+
+    function updateMostRatedByAuthor(bytes32 _content, uint8 _category) private {
+
+        bytes32 _author = contentMap[_content].author();
+        bytes32 _bestRatedByAuhtor = mostRatedByAuthor[_author][_category];
+        uint _popularRate = 0;
+
+        if(_bestRatedByAuhtor == 0x0) {
+            // First rating to a content of that author
+            mostRatedByAuthor[_author][_category] = _content;
+        }
+        else {
+
+            _popularRate = contentMap[_bestRatedByAuhtor].getRate(_category);
+            
+            if(contentMap[_content].getRate(_category) > _popularRate) {
+                
+                mostRatedByAuthor[_author][_category] = _content;
+            }
+        }
+    }
+
+    function updateMostRatedByGenre(bytes32 _content, uint8 _category) private  {
+
+        bytes32 _genre = contentMap[_content].getGenre();
+        bytes32 _bestRatedByGenre = mostRatedByGenre[_genre][_category];
+        uint _popularRate = 0;
+
+        if(_bestRatedByGenre == 0x0) {
+            // First rating to a content to that genre
+            mostRatedByGenre[_genre][_category] = _content;
+        }
+        else {
+
+            _popularRate = contentMap[_bestRatedByGenre].getRate(_category);
+            
+            if(contentMap[_content].getRate(_category) > _popularRate) {
+                
+                mostRatedByGenre[_genre][_category] = _content;
+            }
+        }        
+    }
+
+    function updateMostPopularByAuthor(bytes32 _content) private {
+
+        bytes32 _author = contentMap[_content].author();                    // author name
+        bytes32 _currentPopularByAuthor = mostPopularAuthorMap[_author];    // pop content
+        uint _popularViews = 0;
+
+        if(_currentPopularByAuthor == 0x0){
+            // First access to a content to that author
+            mostPopularAuthorMap[_author] = _content;
+            emit NewPopularByAuthor(_author, _content);
+        }
+        else {
+            _popularViews = contentMap[_currentPopularByAuthor].views();    // pop views
+    
+            if(contentMap[_content].views() > _popularViews) {
+                
+                mostPopularAuthorMap[_author] = _content;
+                emit NewPopularByAuthor(_author, _content);
+            }
+        }   
+
+    }
+
+    function updateMostPopularByGenre(bytes32 _content) private {
+
+        bytes32 _genre = contentMap[_content].getGenre();               // genre name
+        bytes32 _currentPopularByGenre = mostPopularGenreMap[_genre];   // pop content
+        uint _popularViews = 0;
+
+        if(_currentPopularByGenre == 0x0){
+            // First access to a content of that genre
+            mostPopularGenreMap[_genre] = _content;            
+            emit NewPopularByGenre(_genre, _content);
+        }
+        else {
+            _popularViews = contentMap[_currentPopularByGenre].views(); // pop views
+    
+            if(contentMap[_content].views() > _popularViews) {
+                
+                mostPopularGenreMap[_genre] = _content;
+                emit NewPopularByGenre(_genre, _content);
+            }
+        }
     }
 }

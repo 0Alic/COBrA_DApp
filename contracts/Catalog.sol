@@ -50,13 +50,13 @@ contract Catalog {
     uint constant public maxRate = 10;
 
     // Rate mappings
-    bytes32 public bestRatedContent;
+//    bytes32 public bestRatedContent;
     mapping(uint8 => bytes32) public mostRatedContent;
     // author => (category => content)
     mapping(bytes32 => mapping(uint8 => bytes32)) public mostRatedByAuthor;
     mapping(bytes32 => mapping(uint8 => bytes32)) public mostRatedByGenre;
 
-    // User filters
+    // User preferences
     mapping(address => bytes32[]) public userPreferences;
     
         
@@ -257,50 +257,44 @@ contract Catalog {
         }
     }
 
-    // Helper
-            // Pay the author == basePrice * (avgRate / maxRate)        
-    function computeReward(bytes32 _content) private view returns(uint) {
-
-        uint qRate = contentMap[_content].getRate(uint(Categories.Quality));
-        uint pfRate = contentMap[_content].getRate(uint(Categories.PriceFairness));
-        uint rRate = contentMap[_content].getRate(uint(Categories.Rewatchable));
-        uint ffRate = contentMap[_content].getRate(uint(Categories.FamilyFriendly));
-        uint rate = qRate + pfRate + rRate + ffRate;
-        uint max = numCategories * maxRate;
-        return (contentMap[_content].price() * rate) / max;
-    }
-    
+    /// @notice Rate a content
+    /// @param _content The content to rate
+    /// @param ratings The rating array   
     function rateContent(bytes32 _content, uint[] ratings) external validRating(ratings) {
         
         contentMap[_content].rateContent(ratings);
     }
 
     
-    // TODO CONTROLLA BENE
-    function notifyRating(bytes32 _content, uint[] ratings) external validRating(ratings) correctManager(_content) {
-
+    /// @notice Get a rating notification by the manager of a content
+    /// @param _content The rated content
+    function notifyRating(bytes32 _content) external correctManager(_content) {
 
         updateCategory(_content, uint8(Categories.Quality));
         updateCategory(_content, uint8(Categories.PriceFairness));
         updateCategory(_content, uint8(Categories.Rewatchable));
         updateCategory(_content, uint8(Categories.FamilyFriendly));
 
-        uint sum = ratings[uint(Categories.Quality)] + ratings[uint(Categories.PriceFairness)] +
-                    ratings[uint(Categories.Rewatchable)] + ratings[uint(Categories.FamilyFriendly)];
+//        uint sum = ratings[uint(Categories.Quality)] + ratings[uint(Categories.PriceFairness)] +
+//                    ratings[uint(Categories.Rewatchable)] + ratings[uint(Categories.FamilyFriendly)];
 
+
+        uint sum = contentMap[_content].getRateSum();
+        bytes32 _bestRatedContent = mostRatedContent[uint8(Categories.Average)];
         // Update best rated content
-        if(bestRatedContent == 0x0) {
-            bestRatedContent = _content;
+        if(_bestRatedContent == 0x0) {
+            mostRatedContent[uint8(Categories.Average)] = _content;
         }
         else {
 
+            /*
             uint sumBest = contentMap[bestRatedContent].ratingMap(uint(Categories.Quality)) +
                             contentMap[bestRatedContent].ratingMap(uint(Categories.PriceFairness)) +
                             contentMap[bestRatedContent].ratingMap(uint(Categories.Rewatchable)) +
                             contentMap[bestRatedContent].ratingMap(uint(Categories.FamilyFriendly));
-
-            if(sum > sumBest) {
-                bestRatedContent = _content;
+            */
+            if(sum > contentMap[_bestRatedContent].getRateSum()) {
+                mostRatedContent[uint8(Categories.Average)] = _content;
             }
         }
 
@@ -312,11 +306,15 @@ contract Catalog {
     }
     
 
+    /// @notice Add a user preference (author or genre)
+    /// @param _label The name of the author or genre
     function addPreference(bytes32 _label) external {
 
         userPreferences[msg.sender].push(_label);
     }
 
+    /// @notice Get the number of preferences of that user
+    /// @return The number of preferences of that user
     function getPreferenceCount() external view returns(uint) {
 
         return userPreferences[msg.sender].length;
@@ -423,18 +421,24 @@ contract Catalog {
     }
 
 
-    // TODO comments
+    /// @notice Get the most rated content of a given category
+    /// @param _category the category of the requested content
+    /// @return the title of the most popular content
     function getMostRated(uint8 _category) external view validCategory(_category) 
                                                             returns(bytes32) {
 
 
-        if(_category == uint8(Categories.Average))
-            return bestRatedContent;
-        else
-            return mostRatedContent[_category];
+//        if(_category == uint8(Categories.Average))
+//            return bestRatedContent;
+//        else
+        return mostRatedContent[_category];
     }
 
 
+    /// @notice Get the most rated content of a given category of a given author
+    /// @param _category the category of the requested content
+    /// @param _author the author of the requested content
+    /// @return the title of the most popular content
     function getMostRatedByAuthor(bytes32 _author, uint8 _category) external view 
                                                                     validCategory(_category) 
                                                                     returns(bytes32) {
@@ -443,6 +447,10 @@ contract Catalog {
     }    
 
 
+    /// @notice Get the most rated content of a given category
+    /// @param _category the category of the requested content
+    /// @param _genre the genre of the requested content
+    /// @return the title of the most popular content
     function getMostRatedByGenre(bytes32 _genre, uint8 _category) external view 
                                                                 validCategory(_category)    
                                                                 returns(bytes32) {
@@ -493,7 +501,15 @@ contract Catalog {
         selfdestruct(COBrA_CEO_Address);
     }
     
-    /// @notice Helper function to send the payment to authors during the last payment cycle
+
+
+
+        ///////////////////////////////////
+        ///            Helpers          ///
+        ///////////////////////////////////
+
+
+    /// @notice Send the payment to authors during the last payment cycle
     /// @param _content the current content
     /// @param _multiplier the multiplier for the amount computation
     /// @param _factor the factor for the amount computation
@@ -506,95 +522,60 @@ contract Catalog {
     }
 
 
+    /// @notice Compute the raward for an author
+    /// @param _content The content viewed
+    /// @return The amount of wei for the author
+    function computeReward(bytes32 _content) private view returns(uint) {
 
-        ///////////////////////////////////
-        ///            Helpers          ///
-        ///////////////////////////////////
+        /*
+        uint qRate = contentMap[_content].getRate(uint(Categories.Quality));
+        uint pfRate = contentMap[_content].getRate(uint(Categories.PriceFairness));
+        uint rRate = contentMap[_content].getRate(uint(Categories.Rewatchable));
+        uint ffRate = contentMap[_content].getRate(uint(Categories.FamilyFriendly));
+        uint rate = qRate + pfRate + rRate + ffRate;
+        */
+        uint rate = contentMap[_content].getRateSum();
+        uint max = numCategories * maxRate;
+        return (contentMap[_content].price() * rate) / max;
+    }
 
+
+    /// @notice Check whether to update the best content of a given category
+    /// @param _content The viewed content
+    /// @param _category A content's category
     function updateCategory(bytes32 _content, uint8 _category) private {
 
         // Most rated in general
-        
         bytes32 _bestRated = mostRatedContent[_category];
         uint _popularRate = 0;
 
         if(_bestRated == 0x0) {
             // First rating
             mostRatedContent[_category] = _content;
-//            emit NewBestRated(_content, _category);
         }
         else {
             
             _popularRate = contentMap[_bestRated].getRate(_category);
             
-            if(contentMap[_content].getRate(_category) > _popularRate) {
-                
+            if(contentMap[_content].getRate(_category) > _popularRate)
                 mostRatedContent[_category] = _content;
-            }
         }
         
     
         // Update most rated by author
         updateMostRatedByAuthor(_content, _category);
 
-        // Update current most popular content of the author
+        // Update most rated by genre
         updateMostRatedByGenre(_content, _category);        
     }
 
 
     ////
-    // BEST == The most rated in avg
+    // MOST  == The most rated for a category
     ////
-    function updateBestRatedByAuthor(bytes32 _content, uint _contentSum) private {
-
-        bytes32 _author = contentMap[_content].author();
-        uint8 avgPos = uint8(Categories.Average);
-
-        if(mostRatedByAuthor[_author][avgPos] == 0x0)
-            mostRatedByAuthor[_author][avgPos] = _content;
-        else {
-
-            bytes32 _bestByAuthor = mostRatedByAuthor[_author][avgPos];
-
-            uint sumBestAuthor = contentMap[_bestByAuthor].ratingMap(uint(Categories.Quality)) +
-                                    contentMap[_bestByAuthor].ratingMap(uint(Categories.PriceFairness)) +
-                                    contentMap[_bestByAuthor].ratingMap(uint(Categories.Rewatchable)) +
-                                    contentMap[_bestByAuthor].ratingMap(uint(Categories.FamilyFriendly));
-
-    
-    
-
-            if(_contentSum > sumBestAuthor) {
-                mostRatedByAuthor[_author][avgPos] = _content;
-            }
-        }
-    }
-
-    function updateBestRatedByGenre(bytes32 _content, uint _contentSum) private {
-
-        bytes32 _genre = contentMap[_content].getGenre();
-        uint8 avgPos = uint8(Categories.Average);
-        
-        if(mostRatedByGenre[_genre][avgPos] == 0x0)
-            mostRatedByGenre[_genre][avgPos] = _content;
-        else {
-
-            bytes32 _bestByGenre = mostRatedByGenre[_genre][avgPos];
-
-            uint sumBestAuhtor = contentMap[_bestByGenre].ratingMap(uint(Categories.Quality)) +
-                                    contentMap[_bestByGenre].ratingMap(uint(Categories.PriceFairness)) +
-                                    contentMap[_bestByGenre].ratingMap(uint(Categories.Rewatchable)) +
-                                    contentMap[_bestByGenre].ratingMap(uint(Categories.FamilyFriendly));
-
-            if(_contentSum > sumBestAuhtor)
-                mostRatedByGenre[_genre][avgPos] = _content;
-        }
-    }
-
-
-    ////
-    // MOST  == The most rated for each category
-    ////
+    /// @notice Check whether to update the best content of an author of a given category
+    /// @param _content The viewed content
+    /// @param _category A content's category
     function updateMostRatedByAuthor(bytes32 _content, uint8 _category) private  {
 
         bytes32 _author = contentMap[_content].author();
@@ -617,6 +598,9 @@ contract Catalog {
     }
 
 
+    /// @notice Check whether to update the best content of a genre of a given category
+    /// @param _content The viewed content
+    /// @param _category A content's category
     function updateMostRatedByGenre(bytes32 _content, uint8 _category) private  {
 
         bytes32 _genre = contentMap[_content].getGenre();
@@ -631,17 +615,68 @@ contract Catalog {
 
             _popularRate = contentMap[_bestRatedByGenre].getRate(_category);
             
-            if(contentMap[_content].getRate(_category) > _popularRate) {
-                
+            if(contentMap[_content].getRate(_category) > _popularRate)
                 mostRatedByGenre[_genre][_category] = _content;
-            }
         }        
     }
 
 
     ////
-    // MOST POPULAR  == The most popular content
+    // BEST == The most rated in avg
     ////
+    /// @notice Check whether to update the best content of an author (i.e. the the highest category's avg rating)
+    /// @param _content The viewed content
+    /// @param _contentSum The sum of the content's ratings
+    function updateBestRatedByAuthor(bytes32 _content, uint _contentSum) private {
+
+        bytes32 _author = contentMap[_content].author();
+        uint8 avgPos = uint8(Categories.Average);
+
+        if(mostRatedByAuthor[_author][avgPos] == 0x0)
+            mostRatedByAuthor[_author][avgPos] = _content;
+        else {
+
+            bytes32 _bestByAuthor = mostRatedByAuthor[_author][avgPos];
+            /*
+
+            uint sumBestAuthor = contentMap[_bestByAuthor].ratingMap(uint(Categories.Quality)) +
+                                    contentMap[_bestByAuthor].ratingMap(uint(Categories.PriceFairness)) +
+                                    contentMap[_bestByAuthor].ratingMap(uint(Categories.Rewatchable)) +
+                                    contentMap[_bestByAuthor].ratingMap(uint(Categories.FamilyFriendly));
+            */
+            if(_contentSum > contentMap[_bestByAuthor].getRateSum())
+                mostRatedByAuthor[_author][avgPos] = _content;
+        }
+    }
+
+
+    /// @notice Check whether to update the best content of a genre (i.e. the the highest category's avg rating)
+    /// @param _content The viewed content
+    /// @param _contentSum The sum of the content's ratings
+    function updateBestRatedByGenre(bytes32 _content, uint _contentSum) private {
+
+        bytes32 _genre = contentMap[_content].getGenre();
+        uint8 avgPos = uint8(Categories.Average);
+        
+        if(mostRatedByGenre[_genre][avgPos] == 0x0)
+            mostRatedByGenre[_genre][avgPos] = _content;
+        else {
+
+            bytes32 _bestByGenre = mostRatedByGenre[_genre][avgPos];
+            /*
+            uint sumBestAuhtor = contentMap[_bestByGenre].ratingMap(uint(Categories.Quality)) +
+                                    contentMap[_bestByGenre].ratingMap(uint(Categories.PriceFairness)) +
+                                    contentMap[_bestByGenre].ratingMap(uint(Categories.Rewatchable)) +
+                                    contentMap[_bestByGenre].ratingMap(uint(Categories.FamilyFriendly));
+            */
+            if(_contentSum > contentMap[_bestByGenre].getRateSum())
+                mostRatedByGenre[_genre][avgPos] = _content;
+        }
+    }
+
+
+    /// @notice Check whether to update the most popular content of an author
+    /// @param _content The viewed content
     function updateMostPopularByAuthor(bytes32 _content) private {
 
         bytes32 _author = contentMap[_content].author();                    // author name
@@ -665,6 +700,9 @@ contract Catalog {
 
     }
 
+
+    /// @notice Check whether to update the most popular content of a genre
+    /// @param _content The viewed content
     function updateMostPopularByGenre(bytes32 _content) private {
 
         bytes32 _genre = contentMap[_content].getGenre();               // genre name

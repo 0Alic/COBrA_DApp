@@ -96,6 +96,8 @@ contract BaseContentManagement {
     }
     
     
+    /// @notice Rate this content
+    /// @param ratings The rating array
     function rateContent(uint[] ratings) external isCatalog {
 
         ratingMap[uint(Catalog.Categories.Quality)] += ratings[uint(Catalog.Categories.Quality)];
@@ -105,10 +107,13 @@ contract BaseContentManagement {
 
         times++;
 
-        catalog.notifyRating(title, ratings);
+        catalog.notifyRating(title);
     }
     
     
+    /// @notice Get a rate of a category of this content
+    /// @param _category The requested category
+    /// @return The rate
     function getRate(uint _category) external view validCategory(_category) returns(uint)  {
         
         if(times == 0)
@@ -116,4 +121,14 @@ contract BaseContentManagement {
         else 
             return uint(ratingMap[_category] / times);
     }
+
+    /// @notice Get the sum of all ratings
+    /// @return The sum of all ratings
+    function getRateSum() external view returns(uint) {
+
+        return ratingMap[uint(Catalog.Categories.Quality)] +
+                ratingMap[uint(Catalog.Categories.PriceFairness)] +
+                ratingMap[uint(Catalog.Categories.Rewatchable)] +
+                ratingMap[uint(Catalog.Categories.FamilyFriendly)];
+    }   
 }

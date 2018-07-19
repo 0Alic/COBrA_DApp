@@ -211,10 +211,8 @@ App = {
         // Load contract Data
         App.contracts.Catalog.deployed().then(async (instance) => {
 
-            catalogInstance = instance;
-
             // Show premium label
-            if(await catalogInstance.isPremium(App.account)) {
+            if(await instance.isPremium(App.account)) {
                 App.isPremium = true;
                 $("#accountAddress").html("Your Account: " + App.account + ": <b>PREMIUM</b>");
                 $('#buyPremiumBtn').hide();
@@ -225,7 +223,9 @@ App = {
                 $('#buyPremiumBtn').show();
             }
 
-            return catalogInstance.getContentList();
+            if(App.account == await instance.COBrA_CEO_Address()) $('#suicideDiv').show();
+            
+            return instance.getContentList();
  
         }).then(async (resultList) =>  {               
             // Show the list of deployed contents

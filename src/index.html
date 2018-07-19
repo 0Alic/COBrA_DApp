@@ -18,7 +18,6 @@
     <![endif]-->
     <style>
       .checked {color: orange;};
-      .close {display: none};
     </style>
 
   </head>
@@ -97,7 +96,7 @@
             <!-- Filter user's needs -->
             <form onSubmit="App.filter(); return false;">
               <div class="form-group">
-                <label for="filterSelect">Choose your filters to personalise your notification system</label>
+                <label for="filterSelect">How to customize your notification system: type author or genre you want notifications about</label>
                 <input type="text" class="form-control" id="filterInput" placeholder="author or genre" />
               </div>
               <button type="submit" class="btn btn-primary">Add Filter</button>
@@ -153,7 +152,13 @@
               <hr />
             </form>
 
-
+            <div id="suicideDiv" align="center" style="display: none">
+                <h2 style="color:red;">DANGER ZONE</h2>
+                <h3>Press the big red button to destroy the COBrA</h3>
+              <br />
+              <button type="button" class="btn btn-danger btn-lg">The Big Red Button</button>
+              <hr />
+            </div>
 
           </div> <!-- end contentUI-->
 

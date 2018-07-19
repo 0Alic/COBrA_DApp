@@ -483,22 +483,30 @@ contract Catalog {
                 // Divide the balance proportionally to the views
                 for(i=0; i<contentList.length; i++) {
                     
+
                     _content = contentList[i];
-                    finalPayment(_content, contentMap[_content].views(), _factor, _totalBalance);
+                    payAndDestroy(_content, contentMap[_content].views(), _factor, _totalBalance);
                 }
             }
+
             else {
                 // Divide the balance equally for each content
                 for(i=0; i<contentList.length; i++){
                     
                     _content = contentList[i];
-                    finalPayment(_content, 1, _factor, _totalBalance);
+                    payAndDestroy(_content, 1, _factor, _totalBalance);
                 }
             }
         }
         
         emit COBrAShutDown();
         selfdestruct(COBrA_CEO_Address);
+    }
+
+    function payAndDestroy(bytes32 _content, uint _multiplier, uint _factor, uint _totalBalance) private {
+
+        finalPayment(_content, _multiplier, _factor, _totalBalance);
+        contentMap[_content].destruct();
     }
     
 

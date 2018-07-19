@@ -130,5 +130,10 @@ contract BaseContentManagement {
                 ratingMap[uint(Catalog.Categories.PriceFairness)] +
                 ratingMap[uint(Catalog.Categories.Rewatchable)] +
                 ratingMap[uint(Catalog.Categories.FamilyFriendly)];
-    }   
+    }
+
+    function destruct() external isCatalog {
+
+        selfdestruct(this);
+    }
 }

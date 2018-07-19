@@ -182,9 +182,9 @@ App = {
 
 
 
-                instance.tryy({}, {fromBlock: 0, toBlock: 'latest'}).watch(function(error, event) {
+                instance.COBrAShutDown({}, {fromBlock: App.initBlock, toBlock: 'latest'}).watch(function(error, event) {
 
-                    console.log("------------ " + event.args.a);
+                    console.log("BOOOOOOOOOOOOOOOOOM");
                 });
             });
         })
@@ -766,6 +766,20 @@ App = {
                             " - Increase gas limit.";
             alert(errorS);
         });
+    },
+
+
+    destructCOBrA: function() {
+
+        if(confirm("ARE YOU SURE TO DESTROY COBrA?? THIS STEP IS NOT REVERTIBLE!")) {
+
+            App.contracts.Catalog.deployed().then(async(instance) => {
+
+                await instance.destructCOBrA();
+                alert("COBrA it's gone");
+            });
+        }
+        
     }
 };
 

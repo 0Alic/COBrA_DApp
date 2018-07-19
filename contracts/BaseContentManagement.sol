@@ -39,7 +39,8 @@ contract BaseContentManagement {
         _;
     }
 
-
+    /// @notice Check if a given category is valid
+    /// @param _category the category
     modifier validCategory(uint _category) {
         
         require(_category == uint(Catalog.Categories.Quality) ||
@@ -50,6 +51,7 @@ contract BaseContentManagement {
         _;
     }    
     
+
     // @notice returns the type of the content
     // @returns the genre of the content
     function getGenre() public pure returns(bytes32);
@@ -132,6 +134,7 @@ contract BaseContentManagement {
                 ratingMap[uint(Catalog.Categories.FamilyFriendly)];
     }
 
+    /// @notice Destruct method
     function destruct() external isCatalog {
 
         selfdestruct(this);

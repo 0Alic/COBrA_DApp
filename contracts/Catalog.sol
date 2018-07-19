@@ -44,13 +44,13 @@ contract Catalog {
     bytes32[] contentList;
 
     // Categories utilities
+        // Note: Average is not a category, is just a placeholder to store the most rated content in general
     enum Categories { Quality, PriceFairness, Rewatchable, FamilyFriendly, Average } 
     uint constant public numCategories = 4;
     uint constant public minRate = 1;
     uint constant public maxRate = 10;
 
     // Rate mappings
-//    bytes32 public bestRatedContent;
     mapping(uint8 => bytes32) public mostRatedContent;
     // author => (category => content)
     mapping(bytes32 => mapping(uint8 => bytes32)) public mostRatedByAuthor;
@@ -275,10 +275,6 @@ contract Catalog {
         updateCategory(_content, uint8(Categories.Rewatchable));
         updateCategory(_content, uint8(Categories.FamilyFriendly));
 
-//        uint sum = ratings[uint(Categories.Quality)] + ratings[uint(Categories.PriceFairness)] +
-//                    ratings[uint(Categories.Rewatchable)] + ratings[uint(Categories.FamilyFriendly)];
-
-
         uint sum = contentMap[_content].getRateSum();
         bytes32 _bestRatedContent = mostRatedContent[uint8(Categories.Average)];
         // Update best rated content
@@ -287,15 +283,8 @@ contract Catalog {
         }
         else {
 
-            /*
-            uint sumBest = contentMap[bestRatedContent].ratingMap(uint(Categories.Quality)) +
-                            contentMap[bestRatedContent].ratingMap(uint(Categories.PriceFairness)) +
-                            contentMap[bestRatedContent].ratingMap(uint(Categories.Rewatchable)) +
-                            contentMap[bestRatedContent].ratingMap(uint(Categories.FamilyFriendly));
-            */
-            if(sum > contentMap[_bestRatedContent].getRateSum()) {
+            if(sum > contentMap[_bestRatedContent].getRateSum())
                 mostRatedContent[uint8(Categories.Average)] = _content;
-            }
         }
 
         // Update best rated by author
@@ -382,7 +371,6 @@ contract Catalog {
     }
     
     
-
     /// @notice Get the newest content of a given genre
     /// @param _genre the genre of the requested content
     /// @return the title of the newest content
@@ -427,10 +415,6 @@ contract Catalog {
     function getMostRated(uint8 _category) external view validCategory(_category) 
                                                             returns(bytes32) {
 
-
-//        if(_category == uint8(Categories.Average))
-//            return bestRatedContent;
-//        else
         return mostRatedContent[_category];
     }
 
@@ -511,7 +495,6 @@ contract Catalog {
     
 
 
-
         ///////////////////////////////////
         ///            Helpers          ///
         ///////////////////////////////////
@@ -535,13 +518,6 @@ contract Catalog {
     /// @return The amount of wei for the author
     function computeReward(bytes32 _content) private view returns(uint) {
 
-        /*
-        uint qRate = contentMap[_content].getRate(uint(Categories.Quality));
-        uint pfRate = contentMap[_content].getRate(uint(Categories.PriceFairness));
-        uint rRate = contentMap[_content].getRate(uint(Categories.Rewatchable));
-        uint ffRate = contentMap[_content].getRate(uint(Categories.FamilyFriendly));
-        uint rate = qRate + pfRate + rRate + ffRate;
-        */
         uint rate = contentMap[_content].getRateSum();
         uint max = numCategories * maxRate;
         return (contentMap[_content].price() * rate) / max;
@@ -645,13 +621,7 @@ contract Catalog {
         else {
 
             bytes32 _bestByAuthor = mostRatedByAuthor[_author][avgPos];
-            /*
 
-            uint sumBestAuthor = contentMap[_bestByAuthor].ratingMap(uint(Categories.Quality)) +
-                                    contentMap[_bestByAuthor].ratingMap(uint(Categories.PriceFairness)) +
-                                    contentMap[_bestByAuthor].ratingMap(uint(Categories.Rewatchable)) +
-                                    contentMap[_bestByAuthor].ratingMap(uint(Categories.FamilyFriendly));
-            */
             if(_contentSum > contentMap[_bestByAuthor].getRateSum())
                 mostRatedByAuthor[_author][avgPos] = _content;
         }
@@ -671,12 +641,7 @@ contract Catalog {
         else {
 
             bytes32 _bestByGenre = mostRatedByGenre[_genre][avgPos];
-            /*
-            uint sumBestAuhtor = contentMap[_bestByGenre].ratingMap(uint(Categories.Quality)) +
-                                    contentMap[_bestByGenre].ratingMap(uint(Categories.PriceFairness)) +
-                                    contentMap[_bestByGenre].ratingMap(uint(Categories.Rewatchable)) +
-                                    contentMap[_bestByGenre].ratingMap(uint(Categories.FamilyFriendly));
-            */
+
             if(_contentSum > contentMap[_bestByGenre].getRateSum())
                 mostRatedByGenre[_genre][avgPos] = _content;
         }

@@ -145,3 +145,24 @@ function getCheckedStars(category) {
 
     return count;
 }
+
+
+
+function goToCatalog() {
+
+    $('#cobraTitle').html("Catalog");
+    $('#authorDiv').hide();
+    $('#customerDiv').show();
+    $('#catalogBtn').addClass("active");
+    $('#editorBtn').removeClass("active");
+}
+
+
+function goToEditor() {
+
+    $('#cobraTitle').html("Pulish Editor");
+    $('#customerDiv').hide();
+    $('#authorDiv').show();
+    $('#editorBtn').addClass("active");
+    $('#catalogBtn').removeClass("active");
+}

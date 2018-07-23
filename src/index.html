@@ -22,13 +22,27 @@
 
   </head>
   <body>
+
     
+    <nav class="navbar navbar-default">
+      <div class="container-fluid">
+        <div class="navbar-header">
+          <a class="navbar-brand" href="#">COBrA</a>
+        </div>
+        <ul class="nav navbar-nav">
+          <li id="catalogBtn" class="active" style='cursor: pointer' onclick="goToCatalog()"><a href="#">Catalog</a></li>
+          <li id="editorBtn" style='cursor: pointer' onclick="goToEditor()"><a href="#">Publish Center</a></li>
+        </ul>
+      </div>
+    </nav>
+    
+
     <div class="container" >
 
       <div class="row">        
         
         <!-- Header -->
-        <h1 class="text-center">COBrA Catalog</h1>
+        <h1 id="cobraTitle" class="text-center">COBrA Catalog</h1>
         <br/>
 
         <p id="accountAddress" class="text-center"></p>
@@ -51,118 +65,133 @@
 
 
         <!-- Main UI -->
-        <div id="customerDiv" class="col-lg-9">
+        <div id="mainUI">
+          <div id="customerDiv" class="col-lg-9">
 
-          <h2 class="text-center">Our contents</h2>
-          <hr/>
-    
-          <!-- Region for notifications TODO remove it after the sidebar? -->
-          <div id="notificationDiv" style="display: none;">
-            <p class="text-center"><b>Need some hint?</b></p>
-            <p id="notification" class="text-center"></p>
-          </div>
-
-          <!-- Loading... -->
-          <div id="loader">
-            <p class="text-center">Loading...</p>
-          </div>
-
-          <!-- Content List and major UI, to be displayed after the app is initialized -->
-          <div id="contentUI" style="display: none;">
-            <table class="table table-hover">
-              <thead>
-                <tr>
-                  <th scope="col">#</th>
-                  <th scope="col">Title</th>
-                </tr>
-              </thead>
-              <tbody id="contentList">
-              </tbody>
-            </table>
+            <h2 class="text-center">Our contents</h2>
             <hr/>
-
-            <!-- Buy Premium Form -->
-            <form id="premiumForm" onsubmit="App.buyPremium(); return false;">
-                <label>Free stuff for a whole month, for only 0.04 ether</label>
-                <button type="button" class="btn btn-primary pull-right" onclick="App.giftPremiumForm()" id="showPremiumBtn">Gift premium</button>
-                <button type="button" class="btn btn-primary pull-right" onclick="App.giftPremium()" id="giftPremiumBtn" style="display: none">Gift premium to</button>
-                <button type="submit" class="btn btn-primary pull-right" id="buyPremiumBtn" style="margin-right : 10px">Be premium!</button>
+      
+            <!-- Region for notifications TODO remove it after the sidebar? -->
+            <div id="notificationDiv" style="display: none;">
+              <p class="text-center"><b>Need some hint?</b></p>
+              <p id="notification" class="text-center"></p>
+            </div>
+  
+            <!-- Loading... -->
+            <div id="loader">
+              <p class="text-center">Loading...</p>
+            </div>
+  
+            <!-- Content List and major UI, to be displayed after the app is initialized -->
+            <div id="contentUI" style="display: none;">
+              <table class="table table-hover">
+                <thead>
+                  <tr>
+                    <th scope="col">#</th>
+                    <th scope="col">Title</th>
+                  </tr>
+                </thead>
+                <tbody id="contentList">
+                </tbody>
+              </table>
+              <hr/>
+  
+              <!-- Buy Premium Form -->
+              <form id="premiumForm" onsubmit="App.buyPremium(); return false;">
+                  <label>Free stuff for a whole month, for only 0.04 ether</label>
+                  <button type="button" class="btn btn-primary pull-right" onclick="App.giftPremiumForm()" id="showPremiumBtn">Gift premium</button>
+                  <button type="button" class="btn btn-primary pull-right" onclick="App.giftPremium()" id="giftPremiumBtn" style="display: none">Gift premium to</button>
+                  <button type="submit" class="btn btn-primary pull-right" id="buyPremiumBtn" style="margin-right : 10px">Be premium!</button>
+                  <br />
+                  <br />
+                  <input type="text" class="form-control" id="giftPremiumInput" placeholder="dest address" style="display : none"/>
+                  <hr />  
+              </form>
+              
+              <!-- Filter user's needs -->
+              <form onSubmit="App.filter(); return false;">
+                <div class="form-group">
+                  <label for="filterSelect">How to customize your notification system: type author or genre you want notifications about</label>
+                  <input type="text" class="form-control" id="filterInput" placeholder="author or genre" />
+                </div>
+                <button type="submit" class="btn btn-primary">Add Filter</button>
+                <hr />
+              </form>
+  
+  
+              <!-- Most popular informations -->
+              <form onSubmit="App.getInfo(); return false;">
+                <div class="form-group">
+                  <label for="getInfoSelect">Need some idea?</label>
+                  <select class="form-control" id="getInfoSelect">
+                      <option value="authorPop">Most Popular of author</option>
+                      <option value="genrePop">Most Popular of genre</option>
+                      <option value="authorLate">Latest of author</option>
+                      <option value="genreLate">Latest of genre</option>
+                      <option disabled>-</option>
+                      <option value="bestOfCategory">Best of category</option>
+                      <option value="bestOfAuthorCategory">Best of author of category</option>
+                      <option value="bestOfGenreCategory">Best of genre of category</option>
+                  </select>
+                  <select class="form-control" id="getCategorySelect">
+                    <option value="average">All categories</option>
+                    <option value="quality">Quality</option>
+                    <option value="priceFairness">Price Fairness</option>
+                    <option value="rewatchable">Rewatchable</option>
+                    <option value="familyFriendly">Family friendlyness</option>
+                  </select>
+                  <input type="text" class="form-control" id="mostPopular" placeholder="author or genre" />
+                </div>
+                <button type="submit" class="btn btn-primary">Watch</button>
+                <label id="infoResult"></label>
+                <hr />
+              </form>
+              
+              <!-- Destruct Div: visible only by owner-->
+              <div id="suicideDiv" align="center" style="display: none">
+                  <h2 style="color:red;">DANGER ZONE</h2>
+                  <h3>Press the big red button to destroy the COBrA</h3>
                 <br />
-                <br />
-                <input type="text" class="form-control" id="giftPremiumInput" placeholder="dest address" style="display : none"/>
-                <hr />  
-            </form>
-            
-            <!-- Filter user's needs -->
-            <form onSubmit="App.filter(); return false;">
-              <div class="form-group">
-                <label for="filterSelect">How to customize your notification system: type author or genre you want notifications about</label>
-                <input type="text" class="form-control" id="filterInput" placeholder="author or genre" />
+                <button type="button" class="btn btn-danger btn-lg" onclick="App.destructCOBrA()">The Big Red Button</button>
+                <hr />
               </div>
-              <button type="submit" class="btn btn-primary">Add Filter</button>
-              <hr />
-            </form>
+  
+            </div> <!-- end contentUI-->
+  
+          </div> <!-- end customer div -->
+  
+    
+          <!-- Author UI -->
+          <div id="authorDiv" class="col-lg-9" style="display: none">
 
-
-            <!-- Most popular informations -->
-            <form onSubmit="App.getInfo(); return false;">
-              <div class="form-group">
-                <label for="getInfoSelect">Need some idea?</label>
-                <select class="form-control" id="getInfoSelect">
-                    <option value="authorPop">Most Popular of author</option>
-                    <option value="genrePop">Most Popular of genre</option>
-                    <option value="authorLate">Latest of author</option>
-                    <option value="genreLate">Latest of genre</option>
-                    <option disabled>-</option>
-                    <option value="bestOfCategory">Best of category</option>
-                    <option value="bestOfAuthorCategory">Best of author of category</option>
-                    <option value="bestOfGenreCategory">Best of genre of category</option>
-                </select>
-                <select class="form-control" id="getCategorySelect">
-                  <option value="average">All categories</option>
-                  <option value="quality">Quality</option>
-                  <option value="priceFairness">Price Fairness</option>
-                  <option value="rewatchable">Rewatchable</option>
-                  <option value="familyFriendly">Family friendlyness</option>
-                </select>
-                <input type="text" class="form-control" id="mostPopular" placeholder="author or genre" />
-              </div>
-              <button type="submit" class="btn btn-primary">Watch</button>
-              <label id="infoResult"></label>
-              <hr />
-            </form>
-            
+            <h2 class="text-center">Upload you content here</h2>
+            <hr/>
             <!-- Auhtor's -->
             <form id="authorUI">
-              <label>Want to be part of COBrA?</label>
-              <button type="button" class="btn btn-primary pull-right" onclick="App.publishForm()">Publish something!</button>
-  
-              <div id="publishDiv" style="display: none;">
+              <div id="publishDiv">
                 <br />
+                <label>Choose a title</label>
                 <input type="text" class="form-control" id="publishTitleInput" placeholder="Insert the title" />
+                <br />
+                <label>Insert your nickname</label>
                 <input type="text" class="form-control" id="publishAuthorInput" placeholder="Insert your author's nickname" />
+                <br />
+                <label>Choose a genre</label>
                 <select class="form-control" id="genreSelect">
-                    <option value="photo">Photo</option>
-                    <option value="song">Song</option>
-                    <option value="video">Video</option>
+                  <option value="PhotoContent">Photo</option>
+                  <option value="SongContent">Song</option>
+                  <option value="VideoContent">Video</option>
                 </select>
                 <br />
-                <button type="button" class="btn btn-primary" onclick="App.addContent()">Publish</button>
+                <button type="button" class="btn btn-primary" onclick="DeployEditor.deployContent()">Load</button>
               </div>
               <hr />
             </form>
 
-            <div id="suicideDiv" align="center" style="display: none">
-                <h2 style="color:red;">DANGER ZONE</h2>
-                <h3>Press the big red button to destroy the COBrA</h3>
-              <br />
-              <button type="button" class="btn btn-danger btn-lg" onclick="App.destructCOBrA()">The Big Red Button</button>
-              <hr />
-            </div>
-
-          </div> <!-- end contentUI-->
+          </div> <!-- end author div -->
 
         </div> <!-- end Main UI -->
+
 
       </div> <!-- end Row -->
 
@@ -244,6 +273,8 @@
     <script src="js/truffle-contract.js"></script>
     <script src="js/catalogApp.js"></script>
     <script src="js/helpers.js"></script>
+    <script src="js/deployEditor.js"></script>
+
     <script>
 
       // Add some click listeners

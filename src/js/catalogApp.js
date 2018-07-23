@@ -15,6 +15,7 @@ App = {
     preferences: [],
 
 
+
     ////////////////////////////////////////////
     ////            Init Functions          ////
     ////////////////////////////////////////////
@@ -50,33 +51,24 @@ App = {
     /* Upload the contract's abstractions */
     initContract: function() {
 
-      // TODO riscrivere meglio
-      $.getJSON("BaseContentManagement.json", function(baseContent) {
+
+      $.getJSON("BaseContentManagement.json", function(baseContent)  {
 
             // Inistanitiate a new truffle contract from the artifact
             App.contracts.BaseContent = TruffleContract(baseContent);
             // Connect provider to interact with contract
             App.contracts.BaseContent.setProvider(App.web3Provider);
 
-            // TODO aggiungere le altre 2 astrazioni, oppure aggiungerle in una seconda UI?
-            $.getJSON("PhotoContentManagement.json", function(photoContent) {
 
-                App.contracts.PhotoContent = TruffleContract(photoContent);
-                App.contracts.PhotoContent.setProvider(App.web3Provider);
+            $.getJSON("Catalog.json", function(catalog)  {
+                App.contracts.Catalog = TruffleContract(catalog);
+                App.contracts.Catalog.setProvider(App.web3Provider);
 
-                $.getJSON("Catalog.json", function(catalog) {
-
-                    App.contracts.Catalog = TruffleContract(catalog);
-                    App.contracts.Catalog.setProvider(App.web3Provider);
-    
-                    App.listenForEvents();
-                    
-                    // Load first series of contracts
-                    return App.render();
-                });
-    
-            });
-
+                App.listenForEvents();
+                        
+                // Load first series of contracts
+                return App.render();
+            })
         }) 
     },
 
@@ -490,40 +482,6 @@ App = {
      * Publish a new content
      */
     addContent: function() {
-
-        var title = $('#publishTitleInput').val();
-        var author = $('#publishAuthorInput').val();
-        var genre = $('#genreSelect').val();
-
-        const infoString = "REMINDER: You are creating a new content. Content info:\n" +
-                            "\n - Title: " + title +
-                            "\n - Auhtor: " + author +
-                            "\n - Genre: " + genre +
-                            "\nConfirm or reject the transation on metamask.";
-
-        alert(infoString);
-
-        App.contracts.Catalog.deployed().then(async(instance) => {
-
-            var contentManagerInstance;
-
-            switch (genre) {
-                case "photo":
-                    contentManagerInstance = await App.contracts.PhotoContent.new(web3.fromUtf8(title),
-                                                                                    web3.fromUtf8(author),
-                                                                                    instance.address);
-                    break;
-                    // Aggiungi il resto TODO
-            }
-
-        }).catch(function(error) {
-            console.log(error);
-            const errorS = "Error while processing, possible reasons:\n"+
-                            " - One input field not valid;\n"+
-                            " - Not enough balance;\n"+
-                            " - Increase gas limit.";
-            alert(errorS);
-        });
 
         // TODO Fare in modo che un autore possa linkare il contratto a piacere
 

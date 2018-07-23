@@ -16,6 +16,8 @@
     "lite-server": "^2.3.0"
   },
   "dependencies": {
+    "file-system": "^2.2.2",
+    "fs": "0.0.1-security",
     "truffle-contract": "^3.0.6"
   }
 }

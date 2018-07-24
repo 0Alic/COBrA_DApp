@@ -23,7 +23,7 @@
   </head>
   <body>
 
-    
+    <!-- Upper navbar -->
     <nav class="navbar navbar-default">
       <div class="container-fluid">
         <div class="navbar-header">
@@ -48,7 +48,7 @@
         <p id="accountAddress" class="text-center"></p>
         <hr/>
 
-        <!-- Notification Sidebar --> <!-- TODO add col-sm, dm !? -->
+        <!-- Notification Sidebar --> 
         <div class="col-lg-3">
             <h2 class="text-center">What's going on</h2>
             <hr />
@@ -174,7 +174,7 @@
           <!-- Author UI -->
           <div id="authorDiv" class="col-lg-9" style="display: none">
 
-            <h2 class="text-center">Upload you content here</h2>
+            <h2 class="text-center">Upload your content here</h2>
             <hr/>
             <!-- Auhtor's -->
             <form id="authorUI">
@@ -219,7 +219,6 @@
 
         </div> <!-- end Main UI -->
 
-
       </div> <!-- end Row -->
 
 
@@ -235,7 +234,7 @@
               <h4 class="modal-title">Content Details</h4>
             </div>
             <div id="rateDiv" class="modal-body">
-
+              <!-- Filled at runtime -->
             </div>
             <div class="modal-footer">
               <!-- Gift Div -->
@@ -247,6 +246,7 @@
                 </div>
                 <hr />
               </div>
+              <!-- Buttons -->
               <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
               <button type="button" class="btn btn-primary btn-buy" data-dismiss="modal">Buy</button>
               <button type="button" class="btn btn-primary btn-consume" data-dismiss="modal" style="display: none;">Consume</button>
@@ -270,7 +270,7 @@
               <h4 class="modal-title">Rate a content</h4>
             </div>
             <div class="modal-body">
-
+              <!-- Filled at runtime -->
             </div>
             <div class="modal-footer">
               <!-- Info Div -->
@@ -310,6 +310,14 @@
       const giftBtn = $('.btn-gift');
       const btnBuyGift = $(".btn-buygift");
 
+      // Gift button, which displays the address input bar and shows the button to start the gift transaction
+      giftBtn.click(function() {
+          contentDiv.show();
+          giftBtn.hide();
+          btnBuyGift.show();
+      });
+
+      // Hide the gift portion every time the modal is hidden
       popup.on('hidden.bs.modal', function () {
 
         contentDiv.hide();
@@ -318,13 +326,8 @@
         $('#giftAddressInput').val("");
       });
 
-
-      giftBtn.click(function() {
-          contentDiv.show();
-          giftBtn.hide();
-          btnBuyGift.show();
-      });
-
+      // Since onclick listeners are attached to the popup's buttons when the the popup is created,
+      // to avoid a chain of listeners they are unbound as soon the popup becomes hidden
       $("#buyModal").on("hidden.bs.modal", function () {
         unbindClick($('.btn-buygift'), $('.btn-buy'), $('.btn-consume'));
       });
@@ -333,7 +336,6 @@
         unbindClick($('.btn-rate'));
       });
 
-      // Helper function
       function unbindClick() {
         Array.from(arguments).forEach(element => { element.unbind("click");});
       }

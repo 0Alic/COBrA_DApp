@@ -4,15 +4,16 @@ App = {
     ////            State Variables         ////
     ////////////////////////////////////////////
 
+    url: 'http://localhost:8545',
     web3Provider: null,
     contracts: {},
     account: '0x0',
     isPremium: false,
     categoryIds: {"quality": 0, "priceFairness": 1, "rewatchable": 2, "familyFriendly": 3, "average": 4},
-    categories: {0: "Quality",1: "PriceFairness",2: "Rewatchable",3: "FamilyFriendly", 4: "Average"},
-    initBlock: 0,
+//    categories: {0: "Quality",1: "PriceFairness",2: "Rewatchable",3: "FamilyFriendly", 4: "Average"},
     listenPeriod: 30,    // app listens for some events from the last 30 blocks
     preferences: [],
+    maxRating: 0,
 
 
 
@@ -33,7 +34,7 @@ App = {
             App.web3Provider = web3.currentProvider;
             web3 = new Web3(web3.currentProvider);
         } else {
-            App.web3Provider = new Web3.providers.HttpProvider('http://localhost:8545');
+            App.web3Provider = new Web3.providers.HttpProvider(url);
             web3 = new Web3(App.web3Provider);
         }
 
@@ -51,8 +52,7 @@ App = {
     /* Upload the contract's abstractions */
     initContract: function() {
 
-
-      $.getJSON("BaseContentManagement.json", function(baseContent)  {
+        $.getJSON("BaseContentManagement.json", function(baseContent)  {
 
             // Inistanitiate a new truffle contract from the artifact
             App.contracts.BaseContent = TruffleContract(baseContent);
@@ -61,15 +61,32 @@ App = {
 
 
             $.getJSON("Catalog.json", function(catalog)  {
+
                 App.contracts.Catalog = TruffleContract(catalog);
                 App.contracts.Catalog.setProvider(App.web3Provider);
 
-                App.listenForEvents();
-                        
-                // Load first series of contracts
-                return App.render();
-            })
-        }) 
+                /* A simple call to the Catalog to check whether it's shut down or not */
+                App.contracts.Catalog.deployed().then(function(instance) {
+
+                    instance.COBrA_CEO_Address().then(function(addr) {
+                        // Enter here only if the Catalog is still alive
+                        App.listenForEvents();
+                        return App.render();
+        
+                    }).catch(function(error) {
+
+                        console.log(error);
+                        $('#cobraTitle').html("COBrA is closed :(");
+                        $('#customerDiv').hide();
+                        $('#authorDiv').hide();
+                        $('.col-lg-3').hide();
+                        $('#catalogBtn').hide();
+                        $('#editorBtn').hide();
+                    });
+                });
+
+            });
+        });
     },
 
     /* Create the event listeners */
@@ -87,14 +104,11 @@ App = {
                 ////
                 // Add listeners
                 ////
-
                 let from = block - App.listenPeriod;
-                App.initBlock = block;
-                
                 if(from < 0) from = 0;
                 
-                // Access
-                instance.UserAccess({}, {fromBlock: App.initBlock, toBlock: 'latest'}).watch(function(error, event) { 
+                // Access granted to content
+                instance.UserAccess({}, {fromBlock: block, toBlock: 'latest'}).watch(function(error, event) { 
                     
                     if(!error && event.args._user == App.account)
                         alert("Wow, you have now access to " + web3.toUtf8(event.args._content) + "!");
@@ -105,36 +119,33 @@ App = {
                 instance.UserConsume({}, {fromBlock: from, toBlock: 'latest'}).watch(function(error, event) {
 
                     if(!error) {
-                        
                         const content = web3.toUtf8(event.args._content);
                         const address = event.args._user.toString();
+
                         addUserNotification(address, "has viewed", content);
-                        console.log("Consumption " + address + " " + content);
                     }
                 });
 
                     // the second starts from the current block to listen to new user's consumption and notify him about leaving a feedback
-                instance.UserConsume({}, {fromBlock: App.initBlock, toBlock: 'latest'}).watch(function(error, event) {
+                instance.UserConsume({}, {fromBlock: block, toBlock: 'latest'}).watch(function(error, event) {
 
                     if(!error) {
-                        
+                        const content = web3.toUtf8(event.args._content);
+                        const address = event.args._user.toString();
                         if(address == App.account)
                             if(confirm("Would you like to leave a feedback to " + content + "?"))
                                 App.showRatingPopup(content);
                     }
                 });
 
-
-
                 // Premium subscription
-                instance.NewPremiumUser({}, {fromBlock: App.initBlock, toBlock: 'latest'}).watch(function(error, event) {
+                instance.NewPremiumUser({}, {fromBlock: block, toBlock: 'latest'}).watch(function(error, event) {
 
                     if(!error && event.args._user == App.account)
-                        alert("Wow, you are now subscribed to premium service! You can now get our contents for free!");
+                        alert("Wow, you are now subscribed to premium service! Now you can get our contents for free!");
                 });
 
                 // New Popular/Latest
-                // TODO filter authors/genres
                 instance.NewPopularByAuthor({}, {fromBlock: from, toBlock: 'latest'}).watch(function(error, event) {
 
                     if(!error && App.preferences.indexOf(event.args._author) != -1) { // Author is in my preferences
@@ -145,7 +156,7 @@ App = {
 
                 instance.NewPopularByGenre({}, {fromBlock: from, toBlock: 'latest'}).watch(async(error, event) => {
 
-                    if(!error && App.preferences.indexOf(event.args._genre) != -1){
+                    if(!error && App.preferences.indexOf(event.args._genre) != -1){ // Genre is in my preferences
                         appendNotification(web3.toUtf8(event.args._genre), "<b>has a new popular content:</b>", web3.toUtf8(event.args._content));
                     }
                 });
@@ -166,17 +177,14 @@ App = {
                 });
 
                 // Author payed
-                instance.AuthorPayed({}, {fromBlock: App.initBlock, toBlock: 'latest'}).watch(function(error, event) {
+                instance.AuthorPayed({}, {fromBlock: block, toBlock: 'latest'}).watch(function(error, event) {
 
                     console.log(web3.toUtf8(event.args._author) + " got payed " + web3.fromWei(event.args._reward, 'ether'));
                 });
 
+                instance.COBrAShutDown({}, {fromBlock: block, toBlock: 'latest'}).watch(function(error, event) {
 
-
-
-                instance.COBrAShutDown({}, {fromBlock: App.initBlock, toBlock: 'latest'}).watch(function(error, event) {
-
-                    console.log("BOOOOOOOOOOOOOOOOOM");
+                    alert("COBrA is closed by the owner");
                 });
             });
         })
@@ -190,9 +198,7 @@ App = {
 
     render: function() {
 
-        var catalogInstance;
         var loader = $("#loader");
-        var loader_p = loader.children();
         var content = $("#contentUI");
         var authorUI = $('#authorUI');
 
@@ -215,6 +221,10 @@ App = {
                 $('#buyPremiumBtn').show();
             }
 
+            // Store max rating
+            App.maxRating = parseInt((await instance.maxRate()).toString());
+
+            // Show Destroy button only to the owner
             if(App.account == await instance.COBrA_CEO_Address()) $('#suicideDiv').show();
             
             return instance.getContentList();
@@ -234,16 +244,14 @@ App = {
 
                 var title =  web3.toUtf8(resultList[i]);
                 // Build the table row, with its own click listener
-                var contentTemplate ="<tr onclick='App.showPurchasePopup(this.id)' id='"+title+"' style='cursor: pointer' data-toggle='modal' data-target='#buyModal'><th>" + (i+1) + 
-                                    "</th><td>" + title + "</td></tr>";
+                var contentTemplate ="<tr onclick='App.showPurchasePopup(this.id)' id='"+title+
+                                    "' style='cursor: pointer' data-toggle='modal' data-target='#buyModal'><th>" +
+                                    (i+1) + "</th><td>" + title + "</td></tr>";
                 contentList.append(contentTemplate);
 
                 // Render content option
                 var contentOption = '<option value="' + title + '">' + title + '</option>';
                 contentSelect.append(contentOption);
-
-                // Update loading
-                loader_p.html("Loading... " + Math.ceil(((i+1)*100) / resultList.length) + " %");
             }
 
             loader.hide();
@@ -264,8 +272,6 @@ App = {
      */
     buy: function(content) {
 
-        console.log("compra compra compra");
-
         App.contracts.Catalog.deployed().then(async(instance) => {
 
             const contentBytes = web3.fromUtf8(content);
@@ -276,15 +282,10 @@ App = {
                 web3.fromWei(price, 'ether') + " ether. Confirm or reject the transation on metamask.");
 
             transaction = await instance.getContent(contentBytes ,{from: App.account, value: price});
-            console.log("Content got");
             
         }).catch(function(error) {
             console.log(error);
-            const errorS = "Error while processing, possible reasons:\n"+
-                            " - Not enough balance;\n"+
-                            " - You have already access to this content;\n"+
-                            " - Increase gas limit.";
-            alert(errorS);
+            showErrorAlert("You have already access to this content");
         });
     },
 
@@ -300,16 +301,11 @@ App = {
             alert("REMINDER: You are buying the content " + content + " FOR FREE thanks to our premium service."
                     + "Confirm or reject the transation on metamask.");
 
-
             transaction = await instance.getContentPremium(contentBytes ,{from: App.account});
-            console.log("Content got for free");
             
         }).catch(function(error) {
             console.log(error);
-            const errorS = "Error while processing, possible reasons:\n"+
-                            " - You have already access to this content;\n"+
-                            " - Increase gas limit.";
-            alert(errorS);
+            showErrorAlert("You have already access to this content");
         });
     },
 
@@ -319,8 +315,6 @@ App = {
      */
     consume: function(content) {
         
-        console.log("consuma consuma consuma");
-
         App.contracts.Catalog.deployed().then(async (instance) => {
             
             const contentAddress = await instance.contentMap(web3.fromUtf8(content));
@@ -330,9 +324,7 @@ App = {
 
         }).catch(function(error) {
             console.log(error);
-            const errorS = "Error while processing, possible reasons:\n"+
-                            " - Increase gas limit.";
-            alert(errorS);
+            showErrorAlert();
         });
     },
 
@@ -355,14 +347,13 @@ App = {
                 web3.fromWei(premiumCost, "ether") + " ether. Confirm or reject the transation on metamask.");
 
             transaction = await instance.buyPremium({from: App.account, value: premiumCost});
+
             $("#accountAddress").html("Your Account: " + App.account + ": <b>PREMIUM</b>");
             console.log("Premium got");
+            
         }).catch(function(error) {
-            const errorS = "Error while processing, possible reasons:\n"+
-                            " - Not enough balance;\n"+
-                            " - Address not valid;\n"+
-                            " - Increase gas limit.";
-            alert(errorS);
+            console.log(error);
+            showErrorAlert("Address not valid");
         });
     },
 
@@ -376,7 +367,6 @@ App = {
      * Show gift form
      */
     makeGift: function() {
-
         $('#contentGiftDiv').show();
     },
 
@@ -402,19 +392,14 @@ App = {
 
                 alert("REMINDER: You are gifting a the content" + selector.val() + " to " + input.val() + " at the cost of " +
                     web3.fromWei(price, "ether") + " ether. Confirm or reject the transation on metamask.");
+
                 transaction = await instance.giftContent(content, input.val(), {from: App.account, value: price});
                 console.log("Content gifted");
                 $('#contentGiftDiv').hide();
-
             }
         }).catch(function(error) {
             console.log(error);
-            const errorS = "Error while processing, possible reasons:\n"+
-                            " - Not enough balance;\n"+
-                            " - Address not valid;\n"+
-                            " - The destinatary has already access to this content;\n"+
-                            " - Increase gas limit.";
-            alert(errorS);
+            showErrorAlert("Address not valid", "The destinatary has already access to this content");
         });
     },
 
@@ -458,10 +443,7 @@ App = {
             }
         }).catch(function(error) {
             console.log(error);
-            const errorS = "Error while processing, possible reasons:\n"+
-                            " - Not enough balance;\n"+
-                            " - Increase gas limit.";
-            alert(errorS);
+            showErrorAlert();
         });
     },
 
@@ -481,16 +463,14 @@ App = {
             if(address == "")
                 alert("Empty field");
             else {
-                alert("You are linking your content to the Catalog. Confirm or reject the transaction on Metamask.");
+                alert("REMINDER: You are linking your content to the Catalog. Confirm or reject the transaction on Metamask.");
+                
                 await instance.addContent(address);
                 App.render();
             }
         }).catch(function(error) {
             console.log(error);
-            const errorS = "Error while processing, possible reasons:\n"+
-                            " - Not enough balance;\n"+
-                            " - Increase gas limit.";
-            alert(errorS);
+            showErrorAlert();
         });
     },
 
@@ -570,11 +550,19 @@ App = {
 
         App.contracts.Catalog.deployed().then(async (instance) => {
 
-            if(input.val() != "")
+            if(input.val() != ""){
+                alert("REMINDER: You are creating a filger for " + input.val() + " to receive notification from."+
+                        "Confirm or reject the transaction on Metamask");
+
                 await instance.addPreference(web3.fromUtf8(input.val()));
+            }
             else
                 alert("Empty field");
-        });             
+
+        }).catch(function(error) {
+            console.log(error);
+            showErrorAlert();
+        });;             
     },
 
     ////////////////////////////////////////////
@@ -589,7 +577,7 @@ App = {
     showPurchasePopup: function(content){
 
         // Load content's contracts for more info
-        const popup = $('#buyModal');
+//        const popup = $('#buyModal');
         const popupBody = $(".modal-body");
         const buyBtn = $(".btn-buy");
         const consumeBtn = $(".btn-consume");
@@ -663,7 +651,7 @@ App = {
             $('#rateDiv > #rewatchRate').html(createRateOfContent(rewatch));
             $('#rateDiv > #familyRate').html(createRateOfContent(family));
 
-            // Display buy or consum button, depending on the user's access rights to that content
+            // Display buy or consume button, depending on the user's access rights to that content
             if(access) {
                 buyBtn.hide();
                 consumeBtn.show();
@@ -676,7 +664,7 @@ App = {
     },
 
     ////////////////////////////////////////////
-    ////         Show Content Popup         ////
+    ////          Rating Functions          ////
     ////////////////////////////////////////////
 
     /**
@@ -725,15 +713,17 @@ App = {
 
         }).catch(function(error) {
             console.log(error);
-            const errorS = "Error while processing, possible reasons:\n"+
-                            " - One input field not valid;\n"+
-                            " - Not enough balance;\n"+
-                            " - Increase gas limit.";
-            alert(errorS);
+            showErrorAlert("One input field not valid");
         });
     },
 
+    ////////////////////////////////////////////
+    ////         COBrA SelfDestruct         ////
+    ////////////////////////////////////////////
 
+    /**
+     * Destroy the Catalog smart contract. Iteratively, destroy all the attached contents
+     */
     destructCOBrA: function() {
 
         if(confirm("ARE YOU SURE TO DESTROY COBrA?? THIS STEP IS NOT REVERTIBLE!")) {
@@ -744,7 +734,6 @@ App = {
                 alert("COBrA it's gone");
             });
         }
-        
     }
 };
 

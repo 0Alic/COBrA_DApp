@@ -38,7 +38,7 @@ function appendNotification(from, middleText, content) {
  */
 function loadRating() {
 
-    const s = '<label class="pull-left">Quality:</label>' +
+    return '<label class="pull-left">Quality:</label>' +
                 '<div id="qualityRate" class="pull-right"></div>' +
                 '</br></br>' +
                 '<label class="pull-left">Price Fairness:</label>'+
@@ -50,7 +50,6 @@ function loadRating() {
                 '<label class="pull-left">Family Friendly:</label>'+
                 '<div id="familyRate" class="pull-right"></div>'+
                 '</br>';
-    return s;
 }
 
 /**
@@ -67,7 +66,7 @@ function createRateOfContent(rate) {
         s += createStar(i, false, 'checked');
 
     // Generate 10-'rate' number of unchecked stars
-    for(; i<=10; i++) 
+    for(; i<=App.maxRating; i++) 
         s += createStar(i, false, '');
 
     return s;
@@ -82,7 +81,7 @@ function createRating(category) {
     let s = "";
     s += createStar(1, true, 'checked', category);
 
-    for(var i=2; i<=10; i++) 
+    for(var i=2; i<=App.maxRating; i++) 
         s += createStar(i, true, '', category);
 
     return s;
@@ -115,7 +114,7 @@ function addStars(ths, sno, category) {
 
     // The category helps to get the stars by id
 
-    for (var i=1;i<=10;i++) {
+    for (var i=1;i<=App.maxRating;i++) {
         var cur = $('#star'+category+''+i);
         cur.removeClass("checked");
     }
@@ -137,7 +136,7 @@ function getCheckedStars(category) {
     // The category helps to get the stars by id
     var count = 0;
 
-    for(var i=1; i<=10; i++) {
+    for(var i=1; i<=App.maxRating; i++) {
 
         var cur = $('#star'+category+''+i);
         if(cur.hasClass("checked"))  count++;
@@ -165,4 +164,16 @@ function goToEditor() {
     $('#authorDiv').show();
     $('#editorBtn').addClass("active");
     $('#catalogBtn').removeClass("active");
+}
+
+function showErrorAlert() {
+
+    let errorS = "Error while processing, possible reasons:\n"+
+    " - Not enough balance;\n"+
+    " - Increase gas limit;\n";
+
+    for(var i=0; i<arguments.length; i++)
+        errorS += " - " + arguments[i] + ";\n";
+    
+    alert(errorS);
 }

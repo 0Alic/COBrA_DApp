@@ -6,11 +6,6 @@ DeployEditor = {
 
     web3Provider: null,
     contracts: {},
-    account: '0x0',
-    isPremium: false,
-    initBlock: 0,
-    listenPeriod: 30,    // app listens for some events from the last 30 blocks
-
 
     ////////////////////////////////////////////
     ////            Init Functions          ////
@@ -25,12 +20,11 @@ DeployEditor = {
     /* initialize Web3 */
     initWeb3: function() {
         
-        // POsso rimuovere?
         if(typeof web3 != 'undefined') {
             DeployEditor.web3Provider = web3.currentProvider;
             web3 = new Web3(web3.currentProvider);
         } else {
-            DeployEditor.web3Provider = new Web3.providers.HttpProvider('http://localhost:8545');
+            DeployEditor.web3Provider = new Web3.providers.HttpProvider(App.url);
             web3 = new Web3(DeployEditor.web3Provider);
         }
 
@@ -59,6 +53,9 @@ DeployEditor = {
         });
     },
 
+    /**
+     * Deploy a new content on the blockchain
+     */
     deployContent: function() {
 
         const title = $('#publishTitleInput').val();
@@ -66,7 +63,7 @@ DeployEditor = {
         const genre = $('#genreSelect').val();
         const price = $('#priceInput').val();
         const unit = $('#priceUnitSelect').val();
-        const finalPrice = parseInt(price) * parseInt(unit);
+        const priceInWei = parseInt(price) * parseInt(unit);
 
         App.contracts.Catalog.deployed().then( async(instance) => {
 
@@ -74,12 +71,11 @@ DeployEditor = {
                     "- Author: " + author +
                     "\n- Title: " + title + 
                     "\n- Genre: " + genre +
-                    "\n- Cost : " + web3.fromWei(finalPrice, 'ether') + " ether" +
+                    "\n- Cost : " + web3.fromWei(priceInWei, 'ether') + " ether" +
                     "\n Confirm or reject the transation on metamask.");
 
-            const content = await DeployEditor.contracts[genre].new(web3.fromUtf8(author), web3.fromUtf8(title), finalPrice, instance.address);
+            const content = await DeployEditor.contracts[genre].new(web3.fromUtf8(author), web3.fromUtf8(title), priceInWei, instance.address);
 
-            console.log(content.address);
             alert("Contratulations! Your content was succesfully deployed on the blockchain!\n"+
                     "The address is: " + content.address + ".\nUse this address to link your content to the Catalog.");
 

@@ -469,22 +469,26 @@ App = {
     ////            Publish Content         ////
     ////////////////////////////////////////////
 
-
-    /**
-     * Show the publish form
-     */
-    publishForm: function() {
-
-        $('#publishDiv').show();        
-    },
-
     /**
      * Publish a new content
      */
-    addContent: function() {
+    publish: function() {
 
-        // TODO Fare in modo che un autore possa linkare il contratto a piacere
+        App.contracts.Catalog.deployed().then(async(instance) => {
 
+            const address = $('#publishInput').val();
+            console.log(address);
+
+            alert("You are linking your content to the Catalog. Confirm or reject the transaction on Metamask.");
+            await instance.addContent(address);
+
+        }).catch(function(error) {
+            console.log(error);
+            const errorS = "Error while processing, possible reasons:\n"+
+                            " - Not enough balance;\n"+
+                            " - Increase gas limit.";
+            alert(errorS);
+        });
     },
 
 

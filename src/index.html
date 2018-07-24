@@ -146,6 +146,16 @@
                 <label id="infoResult"></label>
                 <hr />
               </form>
+
+              <!-- Publish content to Catalog -->
+              <form onSubmit="App.publish(); return false;">
+                <div class="form-group">
+                  <label>Insert here the address of your deployed content to link it to the Catalog</label>
+                  <input type="text" class="form-control" id="publishInput" placeholder="content's address" />
+                </div>
+                <button type="submit" class="btn btn-primary">Publish content</button>
+                <hr />
+              </form>
               
               <!-- Destruct Div: visible only by owner-->
               <div id="suicideDiv" align="center" style="display: none">
@@ -183,7 +193,9 @@
                   <option value="VideoContent">Video</option>
                 </select>
                 <br />
-                <button type="button" class="btn btn-primary" onclick="DeployEditor.deployContent()">Load</button>
+                <label id="contentAddr"></label>
+                <br />
+                <button type="button" class="btn btn-primary" onclick="DeployEditor.deployContent(); return false;">Load</button>
               </div>
               <hr />
             </form>

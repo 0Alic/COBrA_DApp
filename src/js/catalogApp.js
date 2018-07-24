@@ -477,11 +477,14 @@ App = {
         App.contracts.Catalog.deployed().then(async(instance) => {
 
             const address = $('#publishInput').val();
-            console.log(address);
 
-            alert("You are linking your content to the Catalog. Confirm or reject the transaction on Metamask.");
-            await instance.addContent(address);
-
+            if(address == "")
+                alert("Empty field");
+            else {
+                alert("You are linking your content to the Catalog. Confirm or reject the transaction on Metamask.");
+                await instance.addContent(address);
+                App.render();
+            }
         }).catch(function(error) {
             console.log(error);
             const errorS = "Error while processing, possible reasons:\n"+

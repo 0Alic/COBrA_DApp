@@ -193,6 +193,21 @@
                   <option value="VideoContent">Video</option>
                 </select>
                 <br />
+                
+                <label>Choose a price</label>
+                <div class="row">
+                  <div class="col-sm-9">
+                  <input class="form-control" type="number" id="priceInput" />
+                  </div>
+                  <div class="col-sm-3">
+                  <select class="form-control" id="priceUnitSelect" >
+                    <option value="1">Wei</option>
+                    <option value="1000000000">GWei</option>
+                    <option value="1000000000000000000">Ether</option>
+                  </select>
+                  </div>
+                </div>
+                <br />
                 <label id="contentAddr"></label>
                 <br />
                 <button type="button" class="btn btn-primary" onclick="DeployEditor.deployContent(); return false;">Load</button>

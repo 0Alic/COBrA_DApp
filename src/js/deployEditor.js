@@ -64,6 +64,9 @@ DeployEditor = {
         const title = $('#publishTitleInput').val();
         const author = $('#publishAuthorInput').val();
         const genre = $('#genreSelect').val();
+        const price = $('#priceInput').val();
+        const unit = $('#priceUnitSelect').val();
+        const finalPrice = parseInt(price) * parseInt(unit);
 
         App.contracts.Catalog.deployed().then( async(instance) => {
 
@@ -71,9 +74,10 @@ DeployEditor = {
                     "- Author: " + author +
                     "\n- Title: " + title + 
                     "\n- Genre: " + genre +
+                    "\n- Cost : " + web3.fromWei(finalPrice, 'ether') + " ether" +
                     "\n Confirm or reject the transation on metamask.");
 
-            const content = await DeployEditor.contracts[genre].new(web3.fromUtf8(author), web3.fromUtf8(title), 10, instance.address);
+            const content = await DeployEditor.contracts[genre].new(web3.fromUtf8(author), web3.fromUtf8(title), finalPrice, instance.address);
 
             console.log(content.address);
             alert("Contratulations! Your content was succesfully deployed on the blockchain!\n"+

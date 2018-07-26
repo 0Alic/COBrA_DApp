@@ -1,4 +1,3 @@
-
 // Artifacts == truffle's contract abstraction
 var Catalog = artifacts.require("./Catalog.sol");
 var PhotoContent = artifacts.require("./PhotoContentManagement");
@@ -14,6 +13,7 @@ if (typeof web3 !== 'undefined') {
 	web3 = new Web3(new Web3.providers.HttpProvider("http://localhost:8545"));
 }
 
+/*
 const catalogCEO = web3.eth.accounts[0];
 
 const author1 = web3.eth.accounts[1];
@@ -43,41 +43,33 @@ const authorName1 =  web3.fromAscii("cane");
 const authorName2 =  web3.fromAscii("llama");
 const authorName3 =  web3.fromAscii("alpaca");
 const authorName4 =  web3.fromAscii("AlPa-KAH!");
+*/
 
 module.exports = function(deployer) {
 
     deployer.then(async () => {
 
         console.log("\n----Deploying Catalog----\n");
-        const catalog = await deployer.deploy(Catalog, {from: catalogCEO}); // 7M
+        const catalog = await deployer.deploy(Catalog); // 7M
 
+        /*
         // Deploy a few stuff
         console.log("\n----Deploying some Contents----\n");
         const content1 = await deployer.deploy(PhotoContent, authorName1, contentTitle1, contentCost1, catalog.address, {from: author1});
-    //    const ph2 = await deployer.deploy(PhotoContent, web3.fromAscii("cane"), web3.fromAscii("I cani al mare"), catalog.address);
-    //    const ph3 = await deployer.deploy(PhotoContent, web3.fromAscii("gatto"), web3.fromAscii("I gatti si lavano"), catalog.address);
 
         const content3 = await deployer.deploy(SongContent, authorName3, contentTitle3, contentCost3, catalog.address, {from: author3});
         const content33 = await deployer.deploy(SongContent, authorName3, contentTitle33, contentCost3, catalog.address, {from: author3});
         const content41 = await deployer.deploy(VideoContent, authorName4, contentTitle41, contentCost4, catalog.address, {from: author4});
         const content42 = await deployer.deploy(SongContent, authorName4, contentTitle42, contentCost4, catalog.address, {from: author4});
 
-    //    const vi1 = await deployer.deploy(VideoContent, web3.fromAscii("pranK02"), web3.fromAscii("Epico scherzo"), catalog.address);
-    //    const vi2 = await deployer.deploy(VideoContent, web3.fromAscii("pranK03"), web3.fromAscii("NO CLICKBAIT"), catalog.address);
-
         // Attach them to the Catalog
         console.log("\n----Attach contents to Catalog----\n");
         await catalog.addContent(content1.address, {from: author1});
         await catalog.addContent(content41.address, {from: author4});
-    //    await catalog.addContent(vi1.address);
-    //    await catalog.addContent(ph2.address);
 
         await catalog.addContent(content3.address, {from: author3});
         await catalog.addContent(content42.address, {from: author4});
         await catalog.addContent(content33.address, {from: author3});
-
-    //    await catalog.addContent(vi2.address);
-    //    await catalog.addContent(ph3.address);
 
         // Add some visual
         await catalog.getContent(contentTitle3, {from: watcher2, value: contentCost3});
@@ -104,11 +96,6 @@ module.exports = function(deployer) {
         await content41.consumeContent({from: watcher2});
         await catalog.rateContent(contentTitle41, [8,8,10,4], {from: watcher2});
 
-//        await catalog.getContent(contentTitle41, {from: watcher1, value: contentCost4});
-//        await catalog.getContent(contentTitle41, {from: watcher2, value: contentCost4});
-//        await content41.consumeContent({from: watcher1});
-//        await content41.consumeContent({from: watcher2});
-
         console.log("\n----Deploy, attach and view a few more contents----\n");
         const content2 = await deployer.deploy(SongContent, authorName2, contentTitle2, contentCost2, catalog.address, {from: author2});
         const content22 = await deployer.deploy(SongContent, authorName2, contentTitle22, contentCost2, catalog.address, {from: author2});
@@ -128,5 +115,6 @@ module.exports = function(deployer) {
         await catalog.getContent(contentTitle2, {from: watcher1, value: contentCost2});
         await content2.consumeContent({from: watcher1});
         await catalog.rateContent(contentTitle2, [7,7,7,8], {from: watcher1});
+        */
     }); 
 };

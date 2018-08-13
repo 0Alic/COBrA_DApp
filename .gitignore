@@ -4,3 +4,4 @@ build/
 src/js/app.js
 test/
 ropsten.js
+truffle.js

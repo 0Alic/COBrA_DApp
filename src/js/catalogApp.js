@@ -374,23 +374,22 @@ App = {
     /**
      * Gift a content to someone
      */
-    giftContent: function() {
+    giftContent: function(content) {
 
         App.contracts.Catalog.deployed().then(async (instance) => {
 
             var input = $('#giftAddressInput');
-            var selector = $("#contentSelect");
 
             if(input.val() == "") {
                 alert("Empty field");
             }
             else {
 
-                const content = web3.fromUtf8(selector.val());
+                const contentBytes = web3.fromUtf8(content);
                 const manager = await App.contracts.BaseContent.at(await instance.contentMap(contentBytes));
                 const price = await manager.price();
 
-                alert("REMINDER: You are gifting a the content" + selector.val() + " to " + input.val() + " at the cost of " +
+                alert("REMINDER: You are gifting a the content " + content + " to " + input.val() + " at the cost of " +
                     web3.fromWei(price, "ether") + " ether. Confirm or reject the transation on metamask.");
 
                 transaction = await instance.giftContent(content, input.val(), {from: App.account, value: price});

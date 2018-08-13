@@ -13,46 +13,59 @@ if (typeof web3 !== 'undefined') {
 	web3 = new Web3(new Web3.providers.HttpProvider("http://localhost:8545"));
 }
 
-/*
-const catalogCEO = web3.eth.accounts[0];
-
-const author1 = web3.eth.accounts[1];
-const author2 = web3.eth.accounts[2];
-const author3 = web3.eth.accounts[3];
-const author4 = web3.eth.accounts[4];
-
-const watcher1 = web3.eth.accounts[6];
-const watcher2 = web3.eth.accounts[7];
-
-
-const contentCost1 = 100000000000000;
-const contentCost2 = 2000000000000000;
-const contentCost3 = 4000000000000000;
-const contentCost4 = 4000000000000000;
-
-const contentTitle1 = web3.fromAscii("I cani in spiaggia");
-const contentTitle2 = web3.fromAscii("I llama in montagna");
-const contentTitle22 = web3.fromAscii("I llama con palloncini");
-const contentTitle3 = web3.fromAscii("Stay Alpacaed");
-const contentTitle33 = web3.fromAscii("Stasera niente Breaking Italy");
-const contentTitle41 = web3.fromAscii("Tosatura epica, NO CLICKBAIT");
-const contentTitle42 = web3.fromAscii("Alpakko ReMiX");
-
-
-const authorName1 =  web3.fromAscii("cane");
-const authorName2 =  web3.fromAscii("llama");
-const authorName3 =  web3.fromAscii("alpaca");
-const authorName4 =  web3.fromAscii("AlPa-KAH!");
-*/
 
 module.exports = function(deployer) {
 
     deployer.then(async () => {
 
-        console.log("\n----Deploying Catalog----\n");
-        const catalog = await deployer.deploy(Catalog); // 7M
-
+        /////
+        // UN-COMMENT this for deployment on ropsten
+        /////
         /*
+        console.log("\n----Deploying Catalog----\n");
+        const catalog = await deployer.deploy(Catalog);
+        */
+
+        //////////////
+
+        /////
+        // UN-COMMENT this for local deployment
+        /////
+
+        const catalogCEO = web3.eth.accounts[0];
+
+        const author1 = web3.eth.accounts[1];
+        const author2 = web3.eth.accounts[2];
+        const author3 = web3.eth.accounts[3];
+        const author4 = web3.eth.accounts[4];
+
+        const watcher1 = web3.eth.accounts[6];
+        const watcher2 = web3.eth.accounts[7];
+
+
+        const contentCost1 = 100000000000000;
+        const contentCost2 = 2000000000000000;
+        const contentCost3 = 4000000000000000;
+        const contentCost4 = 4000000000000000;
+
+        const contentTitle1 = web3.fromAscii("I cani in spiaggia");
+        const contentTitle2 = web3.fromAscii("I llama in montagna");
+        const contentTitle22 = web3.fromAscii("I llama con palloncini");
+        const contentTitle3 = web3.fromAscii("Stay Alpacaed");
+        const contentTitle33 = web3.fromAscii("Stasera niente Breaking Italy");
+        const contentTitle41 = web3.fromAscii("Tosatura epica, NO CLICKBAIT");
+        const contentTitle42 = web3.fromAscii("Alpakko ReMiX");
+
+
+        const authorName1 =  web3.fromAscii("cane");
+        const authorName2 =  web3.fromAscii("llama");
+        const authorName3 =  web3.fromAscii("alpaca");
+        const authorName4 =  web3.fromAscii("AlPa-KAH!");
+
+        console.log("\n----Deploying Catalog----\n");
+        const catalog = await deployer.deploy(Catalog, {from: catalogCEO});
+
+        
         // Deploy a few stuff
         console.log("\n----Deploying some Contents----\n");
         const content1 = await deployer.deploy(PhotoContent, authorName1, contentTitle1, contentCost1, catalog.address, {from: author1});
@@ -115,6 +128,6 @@ module.exports = function(deployer) {
         await catalog.getContent(contentTitle2, {from: watcher1, value: contentCost2});
         await content2.consumeContent({from: watcher1});
         await catalog.rateContent(contentTitle2, [7,7,7,8], {from: watcher1});
-        */
+        
     }); 
 };

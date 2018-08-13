@@ -7,6 +7,7 @@ var ContentManager = artifacts.require("./BaseContentManagement");
 var web3;
 
 var Web3= require ("web3");
+
 if (typeof web3 !== 'undefined') {
 	web3 = new Web3(web3.currentProvider);
 } else {
@@ -31,7 +32,7 @@ module.exports = function(deployer) {
         /////
         // UN-COMMENT this for local deployment
         /////
-
+        
         const catalogCEO = web3.eth.accounts[0];
 
         const author1 = web3.eth.accounts[1];

@@ -4,16 +4,16 @@ App = {
     ////            State Variables         ////
     ////////////////////////////////////////////
 
-    url: 'http://localhost:8545',
-    web3Provider: null,
-    contracts: {},
-    account: '0x0',
-    isPremium: false,
-    categoryIds: {"quality": 0, "priceFairness": 1, "rewatchable": 2, "familyFriendly": 3, "average": 4},
-//    categories: {0: "Quality",1: "PriceFairness",2: "Rewatchable",3: "FamilyFriendly", 4: "Average"},
-    listenPeriod: 30,    // app listens for some events from the last 30 blocks
-    preferences: [],
-    maxRating: 0,
+    url: 'http://localhost:8545',   // Url for web3
+    web3Provider: null,             // Web3 provider
+    contracts: {},                  // store the truffle contracts abstractions 
+    account: '0x0',                 // current ehtereum account
+    isPremium: false,               // is the account premium
+    categoryIds: {"quality": 0, "priceFairness": 1, 
+                    "rewatchable": 2, "familyFriendly": 3, "average": 4}, // categories Id
+    listenPeriod: 30,               // app listens for some events from the last 30 blocks
+    preferences: [],                // user's preferences
+    maxRating: 0,                   // max value to rate a content
 
 
 
@@ -146,6 +146,7 @@ App = {
                 });
 
                 // New Popular/Latest
+                    // Fill the sidebar in case the user has set some preferences
                 instance.NewPopularByAuthor({}, {fromBlock: from, toBlock: 'latest'}).watch(function(error, event) {
 
                     if(!error && App.preferences.indexOf(event.args._author) != -1) { // Author is in my preferences
@@ -182,6 +183,7 @@ App = {
                     console.log(web3.toUtf8(event.args._author) + " got payed " + web3.fromWei(event.args._reward, 'ether'));
                 });
 
+                // COBrA shuts down
                 instance.COBrAShutDown({}, {fromBlock: block, toBlock: 'latest'}).watch(function(error, event) {
 
                     alert("COBrA is closed by the owner");
@@ -225,7 +227,8 @@ App = {
             App.maxRating = parseInt((await instance.maxRate()).toString());
 
             // Show Destroy button only to the owner
-            if(App.account == await instance.COBrA_CEO_Address()) $('#suicideDiv').show();
+            if(App.account == await instance.COBrA_CEO_Address()) 
+                $('#suicideDiv').show();
             
             return instance.getContentList();
  
@@ -373,6 +376,7 @@ App = {
 
     /**
      * Gift a content to someone
+     * @param content: the content to consume
      */
     giftContent: function(content) {
 
@@ -480,7 +484,7 @@ App = {
 
 
     /**
-     * Get inforamtion about a most popular or latest published content 
+     * Get information about a most popular or latest published content 
      */
     getInfo: function() {
 
@@ -542,7 +546,9 @@ App = {
     ////    Filter Content Notifications    ////
     ////////////////////////////////////////////
 
-
+    /**
+     * Add a new user preference to personalise the notifications
+     */
     filter: function() {
 
         var input = $('#filterInput');
@@ -550,7 +556,7 @@ App = {
         App.contracts.Catalog.deployed().then(async (instance) => {
 
             if(input.val() != ""){
-                alert("REMINDER: You are creating a filger for " + input.val() + " to receive notification from."+
+                alert("REMINDER: You are creating a filter for " + input.val() + " to receive notification from."+
                         "Confirm or reject the transaction on Metamask");
 
                 await instance.addPreference(web3.fromUtf8(input.val()));
@@ -576,7 +582,6 @@ App = {
     showPurchasePopup: function(content){
 
         // Load content's contracts for more info
-//        const popup = $('#buyModal');
         const popupBody = $(".modal-body");
         const buyBtn = $(".btn-buy");
         const consumeBtn = $(".btn-consume");
@@ -585,7 +590,7 @@ App = {
         popupBody.html("Loading data...");
 
         
-        // Add click listeners
+        // Add click listeners (because they rely on current param, i.e. the selected content)
         if(App.isPremium) {
             // Change buy function whether the user is premium or not
 
@@ -627,10 +632,10 @@ App = {
             const price = web3.fromWei(await contentManager.price(), 'ether');
             const views = await contentManager.views();
             const access = await contentManager.accessRightMap(App.account);
-            const quality = await contentManager.getRate(0); // Quality
-            const priceFair = await contentManager.getRate(1); // Price Fairness
-            const rewatch = await contentManager.getRate(2); // Rewatchable
-            const family = await contentManager.getRate(3); // Family Friendly
+            const quality = await contentManager.getRate(App.categoryIds["quality"]);
+            const priceFair = await contentManager.getRate(App.categoryIds["priceFairness"]);
+            const rewatch = await contentManager.getRate(App.categoryIds["rewatchable"]);
+            const family = await contentManager.getRate(App.categoryIds["familyFriendly"]);
 
             let str = "<h3>Content's details:</h3></br>" +
                         "<b>Title:</b> " + title +
@@ -667,7 +672,7 @@ App = {
     ////////////////////////////////////////////
 
     /**
-     * Show the popup with all the information about a content, and the possibility to buy it
+     * Show the popup with all the information about a content with the possibility to buy it
      * @param content the content to rate
      */
     showRatingPopup: function(content) {
@@ -678,10 +683,10 @@ App = {
         const rateBody = $("#toRateDiv");
 
         rateBody.html(loadRating());
-        $('#toRateDiv > #qualityRate').html(createRating("quality"));
-        $('#toRateDiv > #priceRate').html(createRating("price"));
-        $('#toRateDiv > #rewatchRate').html(createRating("rewatch"));
-        $('#toRateDiv > #familyRate').html(createRating("family"));        
+        $('#toRateDiv > #qualityRate').html(allowRating("quality"));
+        $('#toRateDiv > #priceRate').html(allowRating("price"));
+        $('#toRateDiv > #rewatchRate').html(allowRating("rewatch"));
+        $('#toRateDiv > #familyRate').html(allowRating("family"));        
 
         popupBody.html("<h2>"+content+"</h2>");
 

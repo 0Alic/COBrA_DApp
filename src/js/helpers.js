@@ -76,7 +76,7 @@ function createRateOfContent(rate) {
  * Create a line of interactive stars to let the user to rate a content's category
  * @param {*} category the category to rate
  */
-function createRating(category) {
+function allowRating(category) {
 
     let s = "";
     s += createStar(1, true, 'checked', category);
@@ -105,7 +105,7 @@ function createStar(pos, interactible, checked, category) {
 }
 
 /**
- * Rate a content (check the stars)
+ * Rate a content (color the stars after click)
  * @param {*} ths This
  * @param {*} sno The number of stars to check
  * @param {*} category The category

@@ -193,7 +193,38 @@
                   <option value="VideoContent">Video</option>
                 </select>
                 <br />
-                
+
+                <div id="PhotoContentDiv">
+                  <div class="col-sm-5">
+                  <button type="button" class="btn btn-primary">B / W</button>
+                  <button type="button" class="btn btn-primary">Gaussian Blur</button>
+                  <button type="button" class="btn btn-primary">Crop</button>
+                  <button type="button" class="btn btn-primary">Resize</button>
+                  </div>
+                  <div class="row">
+                  <div class="col-sm-1">
+                  <label>Saturiation</label>
+                  </div>
+                  <div class="col-sm-3">
+                  <select class="form-control">
+                    <option>Original</option>
+                    <option>Full</option>
+                    <option>Zero</option>
+                  </select>
+                  </div>
+                  </div>
+                </div>
+                <div id="SongContentDiv" style="display: none">
+                    <button type="button" class="btn btn-primary">Cancel Noise</button>
+                    <button type="button" class="btn btn-primary">Add Cover</button>
+                </div>
+                <div id="VideoContentDiv" style="display: none">
+                  <button type="button" class="btn btn-primary">Add Intro</button>
+                  <button type="button" class="btn btn-primary">Add Outro</button>
+                  <button type="button" class="btn btn-primary">Split</button>
+                </div>
+                <br />
+
                 <label>Choose a price</label>
                 <div class="row">
                   <div class="col-sm-9">
@@ -304,6 +335,10 @@
 
     <script>
 
+      //////
+      // Catalog
+      //////
+      
       // Add some click listeners
       const popup = $('#buyModal');
       const contentDiv = $('#contentGiftDiv');
@@ -340,6 +375,19 @@
         Array.from(arguments).forEach(element => { element.unbind("click");});
       }
 
+      //////
+      // Catalog
+      //////
+
+      // Update UI when selecting option
+      const genreSelector = $("#genreSelect");
+      var currentOption = genreSelector.val() + "Div";
+
+      genreSelector.change(function() {
+        $("#"+currentOption).hide();
+        currentOption = genreSelector.val() + "Div";
+        $("#"+currentOption).show();
+      });
     </script>
   </body>
 </html>

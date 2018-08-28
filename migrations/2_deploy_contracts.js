@@ -49,19 +49,19 @@ module.exports = function(deployer) {
         const contentCost3 = 4000000000000000;
         const contentCost4 = 4000000000000000;
 
-        const contentTitle1 = web3.fromAscii("I cani in spiaggia");
-        const contentTitle2 = web3.fromAscii("I llama in montagna");
-        const contentTitle22 = web3.fromAscii("I llama con palloncini");
-        const contentTitle3 = web3.fromAscii("Stay Alpacaed");
-        const contentTitle33 = web3.fromAscii("Stasera niente Breaking Italy");
-        const contentTitle41 = web3.fromAscii("Tosatura epica, NO CLICKBAIT");
-        const contentTitle42 = web3.fromAscii("Alpakko ReMiX");
+        const contentTitle1 = web3.fromAscii("Panoramica Lajatico");
+        const contentTitle2 = web3.fromAscii("La ballata di Fantozzi");
+        const contentTitle22 = web3.fromAscii("Carlo Martello");
+        const contentTitle3 = web3.fromAscii("Uncle Scrooge: Olio su tela");
+        const contentTitle33 = web3.fromAscii("Uncle Scrooge: Painting");
+        const contentTitle41 = web3.fromAscii("Solidity Tutorial");
+        const contentTitle42 = web3.fromAscii("Create your crypto");
 
 
-        const authorName1 =  web3.fromAscii("cane");
-        const authorName2 =  web3.fromAscii("llama");
-        const authorName3 =  web3.fromAscii("alpaca");
-        const authorName4 =  web3.fromAscii("AlPa-KAH!");
+        const authorName1 =  web3.fromAscii("Artista");
+        const authorName2 =  web3.fromAscii("Paolo Villaggio");
+        const authorName3 =  web3.fromAscii("Carl Barks");
+        const authorName4 =  web3.fromAscii("ChainChannel");
 
         console.log("\n----Deploying Catalog----\n");
         const catalog = await deployer.deploy(Catalog, {from: catalogCEO});
@@ -71,10 +71,10 @@ module.exports = function(deployer) {
         console.log("\n----Deploying some Contents----\n");
         const content1 = await deployer.deploy(PhotoContent, authorName1, contentTitle1, contentCost1, catalog.address, {from: author1});
 
-        const content3 = await deployer.deploy(SongContent, authorName3, contentTitle3, contentCost3, catalog.address, {from: author3});
-        const content33 = await deployer.deploy(SongContent, authorName3, contentTitle33, contentCost3, catalog.address, {from: author3});
+        const content3 = await deployer.deploy(PhotoContent, authorName3, contentTitle3, contentCost3, catalog.address, {from: author3});
+        const content33 = await deployer.deploy(PhotoContent, authorName3, contentTitle33, contentCost3, catalog.address, {from: author3});
         const content41 = await deployer.deploy(VideoContent, authorName4, contentTitle41, contentCost4, catalog.address, {from: author4});
-        const content42 = await deployer.deploy(SongContent, authorName4, contentTitle42, contentCost4, catalog.address, {from: author4});
+        const content42 = await deployer.deploy(VideoContent, authorName4, contentTitle42, contentCost4, catalog.address, {from: author4});
 
         // Attach them to the Catalog
         console.log("\n----Attach contents to Catalog----\n");

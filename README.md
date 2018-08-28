@@ -21,6 +21,7 @@ In any case, the tutorial linked above exaplains everything way better than I do
 ## Install and run
 
 - Install NodeJS;
+- Install Truffle `npm install truffle -g`
 - `git clone` this repository;
 - `npm install`;
 - Install Metamask.
@@ -36,3 +37,9 @@ In any case, the tutorial linked above exaplains everything way better than I do
 ### Ropsten
 
 - Follow [this](https://truffleframework.com/tutorials/using-infura-custom-provider).
+
+----------
+
+Latex code for code highligthing:
+- Javascript: [gist](https://gist.github.com/sgmonda/96941051845f4430989454f1f208ada2) from sgmonda;
+- Solidity: [github repo](https://github.com/s-tikhomirov/solidity-latex-highlighting) from s-tikhomirov.

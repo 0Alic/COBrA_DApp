@@ -19,7 +19,6 @@ contract PhotoContentManagement is BaseContentManagement {
         // "photo"
         return 0x70686f746f000000000000000000000000000000000000000000000000000000;
     }
-    
 }
 
 
@@ -40,7 +39,6 @@ contract SongContentManagement is BaseContentManagement {
         // "song"
         return 0x736f6e6700000000000000000000000000000000000000000000000000000000;
     }
-    
 }
 
 
@@ -60,6 +58,5 @@ contract VideoContentManagement is BaseContentManagement {
     function getGenre() public pure returns(bytes32) {
         // "video"
         return 0x766964656f000000000000000000000000000000000000000000000000000000;
-    }
-    
+    }   
 }

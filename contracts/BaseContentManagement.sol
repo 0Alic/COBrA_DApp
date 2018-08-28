@@ -128,10 +128,10 @@ contract BaseContentManagement {
     /// @return The sum of all ratings
     function getRateSum() external view returns(uint) {
 
-        return ratingMap[uint(Catalog.Categories.Quality)] +
-                ratingMap[uint(Catalog.Categories.PriceFairness)] +
-                ratingMap[uint(Catalog.Categories.Rewatchable)] +
-                ratingMap[uint(Catalog.Categories.FamilyFriendly)];
+        return (ratingMap[uint(Catalog.Categories.Quality)] / times) +
+                (ratingMap[uint(Catalog.Categories.PriceFairness)] / times)+
+                (ratingMap[uint(Catalog.Categories.Rewatchable)]  / times) +
+                (ratingMap[uint(Catalog.Categories.FamilyFriendly)] / times);
     }
 
     /// @notice Destruct method

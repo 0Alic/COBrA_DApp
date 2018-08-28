@@ -180,7 +180,7 @@ App = {
                 // Author payed
                 instance.AuthorPayed({}, {fromBlock: block, toBlock: 'latest'}).watch(function(error, event) {
 
-                    console.log(web3.toUtf8(event.args._author) + " got payed " + web3.fromWei(event.args._reward, 'ether'));
+                    appendNotification(web3.toUtf8(event.args._author), "<b>got rewarded!</b> with", web3.fromWei(event.args._reward, 'ether') + " ether");
                 });
 
                 // COBrA shuts down

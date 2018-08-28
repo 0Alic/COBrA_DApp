@@ -22,7 +22,6 @@ contract Catalog {
     // Utilities
     address public COBrA_CEO_Address;
 
-    uint constant public authorReward = 0.005 ether; // 2.25 eur
     uint constant public authorRewardPeriod = 5; // author gets payed every 10 views
     
     uint constant public premiumCost = 0.04 ether; // 18 eur
@@ -39,7 +38,6 @@ contract Catalog {
     mapping(bytes32 => bytes32) mostPopularAuthorMap;
     mapping(bytes32 => bytes32) mostPopularGenreMap;
     
-    event tryy(bytes32 a);
     // Content List
     bytes32[] contentList;
 

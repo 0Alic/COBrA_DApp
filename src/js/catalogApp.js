@@ -162,10 +162,10 @@ App = {
             if(App.account == await instance.COBrA_CEO_Address()) 
                 $('#suicideDiv').show();
             
-            return instance.getContentList();
- 
-        }).then(async (resultList) =>  {               
             // Show the list of deployed contents
+            var catalogResult = await instance.getStatistics(); // Array of couples <contentName, views>
+            var resultList = catalogResult[0];
+            var viewList = catalogResult[1];
 
             var contentList = $("#contentList");
             var contentSelect = $("#contentSelect");
@@ -177,7 +177,38 @@ App = {
 
             for(var i=0; i < resultList.length; i++) {
 
-                var title =  web3.toUtf8(resultList[i]);
+                var title = web3.toUtf8(resultList[i]);
+                var views = viewList[i];
+                
+                // Build the table row, with its own click listener
+                var contentTemplate ="<tr onclick='App.showPurchasePopup(this.id)' id='"+title+
+                                    "' style='cursor: pointer' data-toggle='modal' data-target='#buyModal'><th>" +
+                                    (i+1) + "</th><td>" + title + "</td><td>" + views + "</td></tr>";
+                contentList.append(contentTemplate);
+
+                // Render content option
+                var contentOption = '<option value="' + title + '">' + title + '</option>';
+                contentSelect.append(contentOption);
+            }
+ /*
+        }).then(async (resultList) =>  {              
+
+            // Show the list of deployed contents
+            var viewList = await instance.getStatistics();
+
+            var contentList = $("#contentList");
+            var contentSelect = $("#contentSelect");
+            var consumeSelector = $('#contentSelectConsume');
+
+            contentList.empty();
+            contentSelect.empty();
+            consumeSelector.empty();
+
+            for(var i=0; i < resultList.length; i++) {
+
+                var title = web3.toUtf8(resultList[i]);
+                var views = viewList[i];
+                
                 // Build the table row, with its own click listener
                 var contentTemplate ="<tr onclick='App.showPurchasePopup(this.id)' id='"+title+
                                     "' style='cursor: pointer' data-toggle='modal' data-target='#buyModal'><th>" +
@@ -188,7 +219,7 @@ App = {
                 var contentOption = '<option value="' + title + '">' + title + '</option>';
                 contentSelect.append(contentOption);
             }
-
+*/
             loader.hide();
             content.show();
             authorUI.show();

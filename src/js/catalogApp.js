@@ -4,9 +4,6 @@ App = {
     ////            State Variables         ////
     ////////////////////////////////////////////
 
-    url: 'http://localhost:8545',   // Url for web3
-    web3Provider: null,             // Web3 provider
-    contracts: {},                  // store the truffle contracts abstractions 
     account: '0x0',                 // current ehtereum account
     isPremium: false,               // is the account premium
     categoryIds: {"quality": 0, "priceFairness": 1, 
@@ -16,83 +13,10 @@ App = {
     maxRating: 0,                   // max value to rate a content
 
 
-
-    ////////////////////////////////////////////
-    ////            Init Functions          ////
-    ////////////////////////////////////////////
-
-
-    init: function() {
-
-        return App.initWeb3();
-    },
-
-    /* initialize Web3 */
-    initWeb3: function() {
-        
-        if(typeof web3 != 'undefined') {
-            App.web3Provider = web3.currentProvider;
-            web3 = new Web3(web3.currentProvider);
-        } else {
-            App.web3Provider = new Web3.providers.HttpProvider(url);
-            web3 = new Web3(App.web3Provider);
-        }
-
-        // Load account data
-        web3.eth.getCoinbase(function(err, account) {
-            if(err == null) {
-                App.account = account;
-                $("#accountAddress").html("Your Account: " + account);
-            }
-        });
-
-        return App.initContract();
-    },
-
-    /* Upload the contract's abstractions */
-    initContract: function() {
-
-        $.getJSON("BaseContentManagement.json", function(baseContent)  {
-
-            // Inistanitiate a new truffle contract from the artifact
-            App.contracts.BaseContent = TruffleContract(baseContent);
-            // Connect provider to interact with contract
-            App.contracts.BaseContent.setProvider(App.web3Provider);
-
-
-            $.getJSON("Catalog.json", function(catalog)  {
-
-                App.contracts.Catalog = TruffleContract(catalog);
-                App.contracts.Catalog.setProvider(App.web3Provider);
-
-                /* A simple call to the Catalog to check whether it's shut down or not */
-                App.contracts.Catalog.deployed().then(function(instance) {
-
-                    instance.COBrA_CEO_Address().then(function(addr) {
-                        // Enter here only if the Catalog is still alive
-                        App.listenForEvents();
-                        return App.render();
-        
-                    }).catch(function(error) {
-
-                        console.log(error);
-                        $('#cobraTitle').html("COBrA is closed :(");
-                        $('#customerDiv').hide();
-                        $('#authorDiv').hide();
-                        $('.col-lg-3').hide();
-                        $('#catalogBtn').hide();
-                        $('#editorBtn').hide();
-                    });
-                });
-
-            });
-        });
-    },
-
     /* Create the event listeners */
     listenForEvents: function() {
 
-        App.contracts.Catalog.deployed().then(async(instance) => {
+        Res.contracts.Catalog.deployed().then(async(instance) => {
 
             // Load preferences
             const prefs = await instance.getPreferenceCount();
@@ -208,8 +132,16 @@ App = {
         authorUI.hide();
         loader.show();
         
+        // Load account data
+        web3.eth.getCoinbase(function(err, account) {
+            if(err == null) {
+                App.account = account;
+                $("#accountAddress").html("Your Account: " + account);
+            }
+        });
+        
         // Load contract Data
-        App.contracts.Catalog.deployed().then(async (instance) => {
+        Res.contracts.Catalog.deployed().then(async (instance) => {
 
             // Show premium label
             if(await instance.isPremium(App.account)) {
@@ -275,10 +207,10 @@ App = {
      */
     buy: function(content) {
 
-        App.contracts.Catalog.deployed().then(async(instance) => {
+        Res.contracts.Catalog.deployed().then(async(instance) => {
 
             const contentBytes = web3.fromUtf8(content);
-            const manager = await App.contracts.BaseContent.at(await instance.contentMap(contentBytes));
+            const manager = await Res.contracts.BaseContent.at(await instance.contentMap(contentBytes));
             const price = await manager.price();
 
             alert("REMINDER: You are buying the content " + content + " at the cost of " +
@@ -298,7 +230,7 @@ App = {
      */
     buyContentPremium: function(content) {
 
-        App.contracts.Catalog.deployed().then(async(instance) => {
+        Res.contracts.Catalog.deployed().then(async(instance) => {
 
             contentBytes = web3.fromUtf8(content);
             alert("REMINDER: You are buying the content " + content + " FOR FREE thanks to our premium service."
@@ -318,10 +250,10 @@ App = {
      */
     consume: function(content) {
         
-        App.contracts.Catalog.deployed().then(async (instance) => {
+        Res.contracts.Catalog.deployed().then(async (instance) => {
             
             const contentAddress = await instance.contentMap(web3.fromUtf8(content));
-            const contentManager = await App.contracts.BaseContent.at(contentAddress);
+            const contentManager = await Res.contracts.BaseContent.at(contentAddress);
 
             contentManager.consumeContent();
 
@@ -342,7 +274,7 @@ App = {
      */
     buyPremium: function() {
 
-        App.contracts.Catalog.deployed().then(async (instance) => {
+        Res.contracts.Catalog.deployed().then(async (instance) => {
 
             const premiumCost = await instance.premiumCost();
 
@@ -380,7 +312,7 @@ App = {
      */
     giftContent: function(content) {
 
-        App.contracts.Catalog.deployed().then(async (instance) => {
+        Res.contracts.Catalog.deployed().then(async (instance) => {
 
             var input = $('#giftAddressInput');
 
@@ -390,7 +322,7 @@ App = {
             else {
 
                 const contentBytes = web3.fromUtf8(content);
-                const manager = await App.contracts.BaseContent.at(await instance.contentMap(contentBytes));
+                const manager = await Res.contracts.BaseContent.at(await instance.contentMap(contentBytes));
                 const price = await manager.price();
 
                 alert("REMINDER: You are gifting a the content " + content + " to " + input.val() + " at the cost of " +
@@ -423,7 +355,7 @@ App = {
      */
     giftPremium: function() {
 
-        App.contracts.Catalog.deployed().then(async (instance) => {
+        Res.contracts.Catalog.deployed().then(async (instance) => {
 
             var input = $('#giftPremiumInput');
 
@@ -459,7 +391,7 @@ App = {
      */
     publish: function() {
 
-        App.contracts.Catalog.deployed().then(async(instance) => {
+        Res.contracts.Catalog.deployed().then(async(instance) => {
 
             const address = $('#publishInput').val();
 
@@ -493,7 +425,7 @@ App = {
         var categorySelector = $('#getCategorySelect');
         var result = $('#infoResult');
 
-        App.contracts.Catalog.deployed().then(async (instance) => {
+        Res.contracts.Catalog.deployed().then(async (instance) => {
 
             var content;
             var category = categorySelector.val();
@@ -553,7 +485,7 @@ App = {
 
         var input = $('#filterInput');
 
-        App.contracts.Catalog.deployed().then(async (instance) => {
+        Res.contracts.Catalog.deployed().then(async (instance) => {
 
             if(input.val() != ""){
                 alert("REMINDER: You are creating a filter for " + input.val() + " to receive notification from."+
@@ -619,11 +551,11 @@ App = {
         });
         
 
-        App.contracts.Catalog.deployed().then(async(instance) => {
+        Res.contracts.Catalog.deployed().then(async(instance) => {
 
             // Load content
             const contentAddress = await instance.contentMap(web3.fromUtf8(content));
-            const contentManager = await App.contracts.BaseContent.at(contentAddress);
+            const contentManager = await Res.contracts.BaseContent.at(contentAddress);
 
             // Content Info
             const title = web3.toUtf8(await contentManager.title());
@@ -710,7 +642,7 @@ App = {
         const rewatch = getCheckedStars('rewatch');
         const family = getCheckedStars('family');
         
-        App.contracts.Catalog.deployed().then(async(instance) => {
+        Res.contracts.Catalog.deployed().then(async(instance) => {
            
             alert("REMINDER: You are rating the content " + content + ".Confirm or reject the transation on metamask.");
             await instance.rateContent(web3.fromUtf8(content), [quality, price, rewatch, family]);
@@ -732,7 +664,7 @@ App = {
 
         if(confirm("ARE YOU SURE TO DESTROY COBrA?? THIS STEP IS NOT REVERTIBLE!")) {
 
-            App.contracts.Catalog.deployed().then(async(instance) => {
+            Res.contracts.Catalog.deployed().then(async(instance) => {
 
                 await instance.destructCOBrA();
                 alert("COBrA it's gone");
@@ -740,10 +672,3 @@ App = {
         }
     }
 };
-
-// Call init whenever the window loads
-$(function() {
-    $(window).load(function() {
-        App.init();
-    });
-});

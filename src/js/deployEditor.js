@@ -1,58 +1,5 @@
 DeployEditor = {
 
-    ////////////////////////////////////////////
-    ////            State Variables         ////
-    ////////////////////////////////////////////
-
-    web3Provider: null,
-    contracts: {},
-
-    ////////////////////////////////////////////
-    ////            Init Functions          ////
-    ////////////////////////////////////////////
-
-
-    init: function() {
-
-        return DeployEditor.initWeb3();
-    },
-
-    /* initialize Web3 */
-    initWeb3: function() {
-        
-        if(typeof web3 != 'undefined') {
-            DeployEditor.web3Provider = web3.currentProvider;
-            web3 = new Web3(web3.currentProvider);
-        } else {
-            DeployEditor.web3Provider = new Web3.providers.HttpProvider(App.url);
-            web3 = new Web3(DeployEditor.web3Provider);
-        }
-
-        return DeployEditor.initContract();
-    },
-
-    /* Upload the contract's abstractions */
-    initContract: function() {
-
-        $.getJSON("PhotoContentManagement.json", function(photoContent) {
-
-            DeployEditor.contracts["PhotoContent"] = TruffleContract(photoContent);
-            DeployEditor.contracts["PhotoContent"].setProvider(DeployEditor.web3Provider);
-
-            $.getJSON("VideoContentManagement.json", function(videoContent) {
-
-                DeployEditor.contracts["VideoContent"] = TruffleContract(videoContent);
-                DeployEditor.contracts["VideoContent"].setProvider(DeployEditor.web3Provider);
-                
-                $.getJSON("SongContentManagement.json", function(songContent) {
-
-                    DeployEditor.contracts["SongContent"] = TruffleContract(songContent);
-                    DeployEditor.contracts["SongContent"].setProvider(DeployEditor.web3Provider);
-                });
-            });
-        });
-    },
-
     /**
      * Deploy a new content on the blockchain
      */
@@ -65,7 +12,7 @@ DeployEditor = {
         const unit = $('#priceUnitSelect').val();
         const priceInWei = parseInt(price) * parseInt(unit);
 
-        App.contracts.Catalog.deployed().then( async(instance) => {
+        Res.contracts.Catalog.deployed().then( async(instance) => {
 
             alert("You are deploying a contract with this information:\n" + 
                     "- Author: " + author +
@@ -74,7 +21,7 @@ DeployEditor = {
                     "\n- Cost : " + web3.fromWei(priceInWei, 'ether') + " ether" +
                     "\n Confirm or reject the transation on metamask.");
 
-            const content = await DeployEditor.contracts[genre].new(web3.fromUtf8(author), web3.fromUtf8(title), priceInWei, instance.address);
+            const content = await Res.contracts[genre].new(web3.fromUtf8(author), web3.fromUtf8(title), priceInWei, instance.address);
 
             alert("Contratulations! Your content was succesfully deployed on the blockchain!\n"+
                     "The address is: " + content.address + ".\nUse this address to link your content to the Catalog.");
@@ -90,10 +37,3 @@ DeployEditor = {
         });
     }
 }
-
-// Call init whenever the window loads
-$(function() {
-    $(window).load(function() {
-        DeployEditor.init();
-    });
-});

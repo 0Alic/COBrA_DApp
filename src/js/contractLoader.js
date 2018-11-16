@@ -12,9 +12,21 @@ Res = {
     /* initialize Web3 */
     initWeb3: function() {
         
+        
         if(typeof web3 != 'undefined') {
-            Res.web3Provider = web3.currentProvider;
-            web3 = new Web3(web3.currentProvider);
+//            Res.web3Provider = web3.currentProvider;
+//            web3 = new Web3(web3.currentProvider);
+            Res.web3Provider = window.ethereum; // !! new standard for modern eth browsers (2/11/18)
+            web3 = new Web3(Res.web3Provider);
+            try {
+                    ethereum.enable().then(async() => {
+                        console.log("Privacy ok");
+                    });
+            }
+            catch(error) {
+                console.log("New privacy feature testing, error");
+                console.log(error);
+            }
         } else {
             Res.web3Provider = new Web3.providers.HttpProvider(Res.url); // <==
             web3 = new Web3(Res.web3Provider);

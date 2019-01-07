@@ -8,6 +8,7 @@ The goal of this project concerns to learn how to write a client application (in
 
 In any case, I would like to thank [DApp univeristy](https://github.com/dappuniversity) with this great [tutorial](https://www.youtube.com/watch?v=3681ZYbDSSk) who helped me a lot at the beginning.
 
+## :construction: Warining :construction: : contracts need to be updated for the new Solidity compiler V 0.5 and Truffle V 5.0.1
 
 ## Tools used
 
